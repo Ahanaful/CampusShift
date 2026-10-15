@@ -1,4 +1,20 @@
-# Phase 1 verification
+# Verification
+
+## Phase 2
+
+Executed on Windows with Python 3.12 and portable Node.js 22.22.0:
+
+- Backend import and `python -m unittest discover -s tests -v`: **20 tests passed**. Coverage includes Phase 1 responses/CORS, registration/login, password hashing and incorrect credentials, JWT expiry, missing signing configuration, role permissions, department isolation, ownership restrictions, profile validation, class/availability CRUD, invalid time ranges, overlap rejection, adjacent windows, cross-type conflict reporting without modifying entries, migrations, and repeatable seeding.
+- Alembic upgrade, downgrade, reinspection, and model/schema consistency were exercised on an isolated temporary database. `alembic check` also passed for the initialized local database.
+- Frontend dependency installation completed; npm reported zero vulnerabilities. `npm run build` passed. There is no configured lint command.
+- A live HTTP smoke check through Vite verified landing/login/registration/deep-route responses, the health proxy, student registration/login/current user, class/availability writes, conflict reporting, supervisor login/directory/class inspection/hour updates, student rejection from supervisor endpoints, and entry deletion. Only temporary randomly named test accounts were created for that check, then removed.
+- The local database was migrated and the Campus Library demo department initialized. A random signing secret was generated in ignored `backend/.env`. No persistent demo account passwords were selected; use the seed command to choose your own privately.
+
+The original API process needed restarting to load Phase 2. The updated backend and existing Vite server were left running for local use. No cloud resources were created and no changes were committed or pushed for Phase 2.
+
+The Windows sandbox blocked temporary-directory access during one migration test run; the complete suite passed with elevated tool execution. Browser automation was unavailable: actual browser rendering, menu/form interaction, responsive appearance, redirect behavior, and the client session timer were not exercised in a browser. Build and HTTP integration checks do not substitute for those manual checks. Use the README workflow to finish browser QA.
+
+## Phase 1 (historical)
 
 Verified locally on Windows with Python 3.12 and a portable Node.js 22.22.0 runtime:
 

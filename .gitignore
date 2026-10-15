@@ -177,3 +177,10 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# Local application databases
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*

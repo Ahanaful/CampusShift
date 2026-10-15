@@ -1,7 +1,15 @@
-# Phase 1 architecture
+# Phase 2 architecture
 
 The React application requests `GET /api/health`. In development Vite forwards `/api` to FastAPI at `http://127.0.0.1:8000`. An optional `VITE_API_BASE_URL` supports independently hosted frontends. FastAPI allows the configured local browser origins through CORS.
 
-The status component checks on mount and on manual retry, validates the response, times out after six seconds, and cancels pending requests when unmounted. There is no persistence, authentication, scheduling, or AWS integration.
+The landing-page status component keeps its mount/manual-retry liveness check. All frontend HTTP calls now use `services/api.js`, which adds in-memory bearer tokens, decodes API errors, times out requests, and supports cancellation. `AuthContext` clears sessions on logout, expiry, or unauthorized responses. Refreshing the browser deliberately requires another login. React Router protects role-specific layouts; backend authorization is authoritative.
 
-Future scheduling logic belongs in `scheduler/`, separate from API routes. Infrastructure belongs in `infrastructure/` so sandbox resources can eventually be recreated. Deployment will require a permitted HTTP entry point and existing sandbox roles; API Gateway, Cognito, and creating IAM roles must not be assumed.
+SQLAlchemy models and Alembic migrations describe departments, users, recurring class schedules, and recurring availability. SQLite foreign keys are enabled on every connection. Schema creation and demo seeding are explicit commands. Passwords are hashed with Argon2id. JWTs use HS256, issuer/audience validation, required subject/issued-at/expiry claims, and a configured random secret. Responses use schemas that exclude password hashes. Current roles and departments are loaded from the database on each authenticated request, rather than trusted from browser input or token role claims.
+
+Routes validate request/response contracts and call account/window services for persistence. Students address `/students/me` so they cannot select a different owner. Supervisor lookups constrain both role and department, returning 404 for inaccessible employees. Public registration creates only students and permits choosing an existing department for this local phase. Only the explicit seed command provisions demo supervisors; there is no public role elevation endpoint.
+
+Days run Monday (`0`) through Sunday (`6`). Windows are local campus times with minute precision and exclusive end boundaries: adjacent windows are allowed. Same-type overlaps return 409. SQLite writes acquire a write reservation before overlap validation to serialize simultaneous saves. Cross-type class/availability intersections are returned as conflict data without silently adjusting or rejecting either entry. Hour limits are profile values from 0–40; students and their department supervisor can update them. There is no distinction between requested and supervisor-enforced limits yet.
+
+The health endpoint preserves its Phase 1 liveness contract without opening the database. Database-backed routes return a safe 503 on storage errors. Missing or weak signing configuration disables authentication with 503 while leaving liveness usable.
+
+Future scheduling logic belongs in `scheduler/`, separate from API routes. Infrastructure belongs in `infrastructure/` so sandbox resources can eventually be recreated. Deployment will require a permitted HTTP entry point and existing sandbox roles; API Gateway, Cognito, and creating IAM roles must not be assumed. No AWS integration or automatic scheduling is implemented.

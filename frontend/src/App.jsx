@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { api } from "./services/api";
 
 function CampusMark() {
   return (
@@ -24,15 +26,9 @@ function ConnectionStatus() {
     setStatus("checking");
     async function checkHealth() {
       try {
-        const base = (import.meta.env.VITE_API_BASE_URL || "").replace(
-          /\/+$/,
-          "",
-        );
-        const response = await fetch(`${base}/api/health`, {
+        const data = await api("/health", {
           signal: controller.signal,
         });
-        if (!response.ok) throw new Error("Health request failed");
-        const data = await response.json();
         if (data.status !== "healthy" || data.application !== "CampusShift")
           throw new Error("Unexpected health response");
         if (active) setStatus("connected");
@@ -87,7 +83,7 @@ function WorkspaceCard({ number, title, description, items }) {
     <article className="workspace-card">
       <div className="card-top">
         <span className="card-number">{number}</span>
-        <span className="coming-soon">Coming soon</span>
+        <span className="coming-soon">Ready for you</span>
       </div>
       <h3>{title}</h3>
       <p>{description}</p>
@@ -100,7 +96,9 @@ function WorkspaceCard({ number, title, description, items }) {
         ))}
       </ul>
       <div className="card-foot">
-        Your future workspace <span aria-hidden="true">→</span>
+        <Link to="/login">
+          Open your workspace <span aria-hidden="true">→</span>
+        </Link>
       </div>
     </article>
   );
@@ -116,9 +114,14 @@ export default function App() {
           </span>
           CampusShift<span className="brand-period">.</span>
         </a>
-        <a className="nav-link" href="#workspaces">
-          Explore workspaces <span aria-hidden="true">↗</span>
-        </a>
+        <div className="landing-nav">
+          <Link className="nav-link" to="/login">
+            Sign in ↗
+          </Link>
+          <Link className="secondary-button" to="/register">
+            Join CampusShift
+          </Link>
+        </div>
       </header>
       <main>
         <section className="hero">
@@ -135,9 +138,9 @@ export default function App() {
               A little more harmony between class time and clocking in. Student
               employee scheduling, built for the rhythm of your university.
             </p>
-            <a className="primary-link" href="#workspaces">
-              Find your workspace <span aria-hidden="true">↗</span>
-            </a>
+            <Link className="primary-link" to="/register">
+              Create your workspace <span aria-hidden="true">↗</span>
+            </Link>
             <div className="hero-note">
               <span className="note-line" /> One campus. A better way to work.
             </div>
@@ -209,7 +212,7 @@ export default function App() {
             <div className="art-label">
               <span aria-hidden="true">✳</span> Work fits campus life.
             </div>
-            <div className="art-index">CAMPUSSHIFT / 01</div>
+            <div className="art-index">CAMPUSSHIFT / 02</div>
           </div>
         </section>
         <section id="workspaces" className="workspaces">
@@ -219,30 +222,30 @@ export default function App() {
               <h2>A place for everyone.</h2>
             </div>
             <p>
-              We're laying the foundation.
+              Your campus work, connected.
               <br />
-              Your dedicated dashboards are next.
+              Your dedicated workspace is ready.
             </p>
           </div>
           <div className="workspace-grid">
             <WorkspaceCard
               number="01 / STUDENTS"
               title="Make room for what matters."
-              description="A future home for managing work around your education."
+              description="Your home for managing work around your education."
               items={[
                 "Share your availability",
                 "Keep classes in the picture",
-                "View shifts and request time off",
+                "Keep your weekly profile up to date",
               ]}
             />
             <WorkspaceCard
               number="02 / SUPERVISORS"
               title="Bring your team together."
-              description="A future home for coordinating your department’s student team."
+              description="Your home for understanding your department’s student team."
               items={[
                 "Understand team availability",
-                "Plan weekly work assignments",
-                "Manage staffing and hour limits",
+                "Review student class schedules",
+                "Review weekly hour limits",
               ]}
             />
           </div>
@@ -254,7 +257,7 @@ export default function App() {
           CampusShift <span aria-hidden="true">/</span> Made for the campus
           community.
         </span>
-        <span>Phase 01 · Foundation</span>
+        <span>Phase 02 · Campus workspaces</span>
       </footer>
     </div>
   );
