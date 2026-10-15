@@ -1,3 +1,62 @@
+.schedule-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(130px, 1fr));
+  gap: 10px;
+  overflow-x: auto;
+  padding: 12px 0;
+}
+.schedule-day {
+  background: #f5f6ef;
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 180px;
+}
+.schedule-day h3 {
+  font-size: 12px;
+  letter-spacing: 0;
+  margin: 0 0 16px;
+}
+.schedule-day h3 span {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: #718077;
+  margin-top: 4px;
+}
+.schedule-day .time-block {
+  font-size: 11px;
+}
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.check-label input {
+  accent-color: #173c35;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.eligibility-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 15px;
+}
+.small-label {
+  font-size: 13px;
+}
+.draft-notice {
+  border: 1px solid #d0dba7;
+  background: #eff3db;
+}
+.draft-notice p {
+  margin-top: 6px;
+}
+.schedule-refresh {
+  margin-top: 16px;
+}
 .landing-nav {
   display: flex;
   align-items: center;

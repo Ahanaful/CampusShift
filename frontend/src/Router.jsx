@@ -21,6 +21,8 @@ import {
   SupervisorDashboard,
 } from "./pages/SupervisorPages";
 import "./dashboard.css";
+import { LocationManager, RequirementManager } from "./pages/StaffingPages";
+import { ScheduleGenerator, StudentSchedule } from "./pages/SchedulePages";
 
 function Protected({ role }) {
   const { user } = useAuth();
@@ -59,6 +61,7 @@ export default function Router() {
             <Route path="/student" element={<DashboardLayout />}>
               <Route index element={<StudentDashboard />} />
               <Route path="profile" element={<StudentProfile />} />
+              <Route path="schedule" element={<StudentSchedule />} />
               <Route
                 path="classes"
                 element={<WindowManager key="classes" kind="classes" />}
@@ -76,6 +79,9 @@ export default function Router() {
               <Route index element={<SupervisorDashboard />} />
               <Route path="employees" element={<EmployeeDirectory />} />
               <Route path="employees/:id" element={<EmployeeProfile />} />
+              <Route path="locations" element={<LocationManager />} />
+              <Route path="requirements" element={<RequirementManager />} />
+              <Route path="schedules" element={<ScheduleGenerator />} />
             </Route>
           </Route>
           <Route

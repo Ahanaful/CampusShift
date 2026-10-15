@@ -1,5 +1,20 @@
 # Verification
 
+## Phase 3
+
+Executed on Windows using Python 3.12 and Node.js 22.22.0:
+
+- Applied the additive `509aa75b1592` migration to the local database; `alembic check` found no pending model changes. A separate preservation test upgraded a database containing Phase 2 users and confirmed the original data and new safe defaults survived.
+- Backend suite: **29 tests passed**, including all 20 Phase 1/2 tests. New coverage includes location eligibility, active state, staffing CRUD/overlap validation, supervisor permissions, department isolation, full-week constraint verification, preserved draft versions, snapshot stability after configuration changes, transactional rollback on failure, private student previews, additive migration preservation, and repeatable scheduling demo seeding.
+- Independent scheduler suite: **13 tests passed** for valid assignments, missing/partial availability, class boundaries, multiple locations without double booking, caps/zero hours, no eligible students, fairness, reduced fragmentation, stable input ordering, week rotation/history, inactive/cross-department inputs and invalid requirements.
+- Frontend build and ESLint checks passed. ESLint was added in Phase 3; the supported ESLint 10 tooling requires Node 22.13+ on the Node 22 release line.
+- Live HTTP smoke check via the existing Vite proxy passed registration/login, class/availability setup, location/eligibility creation, staffing creation, draft generation, version preservation, detail/coverage/hour/gap retrieval, supervisor-only authorization, and own-shift student preview. A three-hour requirement with a one-hour class conflict yielded two assigned hours, one uncovered hour and 66.67% coverage. Deep SPA routes returned successfully. Temporary accounts, schedules, and their isolated test department were removed afterward; existing user data was preserved.
+- The deterministic five-student, two-location demo was seeded twice in an isolated test database without duplicates. Its 44 employee-hours of weekly demand generated both assignments and gaps.
+
+The current local API was restarted to load Phase 3. The backend and Vite server were left running. No persistent scheduling-demo passwords were chosen automatically: run the documented seed command to choose your own privately. No cloud resources were accessed and no changes were committed or pushed.
+
+Limitations: browser automation remains unavailable, so actual UI interaction, responsive appearance, filters/menus, and client session expiration were not exercised in a browser. Greedy scheduling is not guaranteed globally optimal. Local wall-clock durations intentionally do not adjust for DST elapsed-time differences. Historical drafts remain snapshots when current employee inputs change. Earlier checks found and fixed a SQLite downgrade issue and inconsistent creation-time timezone formatting; the complete suites then passed.
+
 ## Phase 2
 
 Executed on Windows with Python 3.12 and portable Node.js 22.22.0:

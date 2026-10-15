@@ -1,13 +1,13 @@
 ﻿# CampusShift
 
-CampusShift helps university departments coordinate student employees, class commitments, and work availability. Phase 2 adds local accounts, student profiles, class and availability management, and a department-scoped supervisor workspace. The Phase 1 landing page and health endpoint remain available.
+CampusShift helps university departments coordinate student employees, class commitments, and work availability. Phase 3 adds work locations, explicit employee eligibility, recurring staffing requirements, and automatic weekly draft scheduling. Accounts, profiles, class/availability management, the landing page, and the health endpoint remain available.
 
 ## Technology and prerequisites
 
 - React 19, Vite 7, JavaScript, Tailwind CSS 4, React Router 7.
 - Python 3.10+, FastAPI, Uvicorn, SQLAlchemy 2, SQLite, and Alembic.
 - Argon2id password hashes and signed, short-lived JWT bearer tokens.
-- Node.js 22.12+ and npm; Git; Windows PowerShell examples below.
+- Node.js 22.13+ and npm (22.22.0 used for verification); Git; Windows PowerShell examples below.
 
 No AWS credentials or services are required. Run commands from the repository root unless a different directory is shown.
 
@@ -17,6 +17,7 @@ No AWS credentials or services are required. Run commands from the repository ro
 cd backend
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python.exe -m pip install -e ..
 # Only copy this on first setup; keep an existing .env.
 Copy-Item .env.example .env
 .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(48))"
@@ -113,10 +114,11 @@ From `frontend/`:
 
 ```powershell
 npm run build
+npm run lint
 npm run preview
 ```
 
-There is no lint script configured. Preview runs on port 4173: to connect directly to the local API, build with `VITE_API_BASE_URL=http://127.0.0.1:8000` and add `http://localhost:4173` or `http://127.0.0.1:4173` to backend CORS as appropriate.
+ESLint checks frontend source for undefined and unused variables and recommended JavaScript issues. Preview runs on port 4173: to connect directly to the local API, build with `VITE_API_BASE_URL=http://127.0.0.1:8000` and add `http://localhost:4173` or `http://127.0.0.1:4173` to backend CORS as appropriate.
 
 ## Structure
 
@@ -139,7 +141,7 @@ backend/
   app/seed.py         Explicit local demo initialization
   alembic/            Versioned database migrations
   tests/              API, authorization, migration and seed tests
-scheduler/            Reserved for independently tested scheduling logic
+scheduler/            Pure scheduling engine, typed inputs, and independent tests
 infrastructure/       Reserved for reproducible infrastructure
 scripts/              Shared automation space
 docs/                 Architecture and verification notes
@@ -149,6 +151,70 @@ docs/                 Architecture and verification notes
 
 This phase uses bearer access tokens in memory; sign-out clears the client token, and any previously copied token remains valid until expiration. There is no token revocation, refresh flow, password reset, email verification, or deployment hardening such as login rate limiting. This is a local development implementation. All authorization is enforced in the backend even if frontend route protection is bypassed.
 
-AWS Academy Cloud Architecting 3 Sandbox supports the listed Lambda, DynamoDB, S3, CloudFront, EC2, CloudFormation, CloudWatch, and RDS services, subject to sandbox permissions. API Gateway and Cognito are unavailable; IAM is read-only. Resources and data may disappear between sessions, so future infrastructure must be reproducible from code. This phase uses no AWS services and creates no cloud resources. DynamoDB, automatic scheduling, time-off, shift publishing, notifications, payroll, and analytics remain out of scope.
+AWS Academy Cloud Architecting 3 Sandbox supports the listed Lambda, DynamoDB, S3, CloudFront, EC2, CloudFormation, CloudWatch, and RDS services, subject to sandbox permissions. API Gateway and Cognito are unavailable; IAM is read-only. Resources and data may disappear between sessions, so future infrastructure must be reproducible from code. This phase uses no AWS services and creates no cloud resources. DynamoDB, time-off, supervisor shift editing, shift swaps/publishing, notifications, payroll, and analytics remain out of scope.
 
-Next: define scheduling inputs and staffing requirements, implement an independently tested scheduling engine respecting classes, availability, and hour limits, and later select a permitted sandbox deployment design.
+Next: Phase 4 supervisor review and formal publication, including how input changes invalidate a draft, before selecting a permitted sandbox deployment design.
+
+## Phase 3 weekly scheduling demo
+
+For an existing Phase 2 checkout, update the environment and apply the additive migration (from the repository root):
+
+```powershell
+backend\.venv\Scripts\python.exe -m pip install -r backend/requirements-dev.txt
+backend\.venv\Scripts\python.exe -m pip install -e .
+cd backend
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe -m app.seed_scheduling --demo
+.\.venv\Scripts\python.exe -m uvicorn main:app --reload --port 8000
+```
+
+The explicit seed command privately asks for a password for new demo accounts. It creates its own **Scheduling Demo** department, two locations, five students (including zero-hour and inactive examples), location eligibility, availability, class conflicts, and ten staffing requirements totaling 44 employee-hours. It does not modify the original Campus Library department or existing account passwords. Fresh setups use deterministic insertion order and identical weekly inputs; repeating the command avoids duplicates and preserves user edits. Use a fresh disposable local database if you need to reproduce the untouched baseline after editing demo records. The command never runs at startup.
+
+In another terminal from the root:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+1. Open <http://127.0.0.1:5173/login> and sign in as `scheduling.supervisor@example.com` with the password you chose.
+2. Inspect **Work locations**, including eligible employees and active status. New locations have nobody eligible until selected explicitly. Inactive employees are excluded from generation, but can still log in and inspect previews.
+3. Inspect **Staffing needs**. Add, edit, deactivate, or delete recurring requirements. Active requirements at one location must not overlap. Requirements referenced by saved drafts cannot be deleted; deactivate them to preserve history. Deactivated locations suppress their staffing requirements in new generations.
+4. Open **Schedule generator**, select Monday **2026-10-19**, and generate. Review employee-minute coverage, assigned hours, amber understaffed periods, explanations, and employee totals. Filter the calendar by location or student. Metrics always describe the whole draft; location gaps remain visible while filtering by employee.
+5. Generate again to create another draft version. Earlier versions remain selectable and unchanged. Repeated generations do not add together or consume hours from other versions.
+6. Sign out, then sign in as `avery.schedule@example.com`, `jordan.schedule@example.com`, or `sam.schedule@example.com` using the same chosen password. The dashboard and **Draft schedule** page show only that student's assignments from the latest draft. Students cannot edit shifts. Every preview is explicitly draft/unpublished, never a finalized assignment.
+
+All recurring windows are campus-local wall-clock time. Departments default to `America/Chicago`, stored on the department and copied into each draft. The engine uses calendar dates and integer minutes, never converts these windows to UTC, and counts local wall-clock minutes even across daylight saving transitions. `created_at` is a separate UTC audit timestamp. Week start must be Monday. Overnight windows are rejected. Staffing times use :00/:30 boundaries; class and availability entries retain minute precision. A complete 30-minute staffing slot must fit submitted availability without any class conflict. Partial slots remain uncovered; zero-hour students receive no shifts.
+
+The algorithm is deterministic greedy, not globally optimal. It processes chronological 30-minute slots, favors locations with fewer eligible candidates relative to demand, then ranks students by one-hour bands of hours already assigned this week, previous-week assigned minutes, continuity, exact current minutes, and a stable week-rotated ID tie-breaker. Adjacent assignments for the same employee, location, and requirement merge into longer shifts. Previous-week history uses only the newest draft of the latest earlier scheduled week, never drafts from the target week; this history is part of the saved input snapshot. This balances hours and reduces fragmentation without relaxing constraints. See [scheduling design](docs/scheduling.md) for details and limitations.
+
+Run independent engine tests from the root, then backend integration tests:
+
+```powershell
+backend\.venv\Scripts\python.exe -m unittest discover -s scheduler/tests -v
+cd backend
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m alembic check
+```
+
+## Scheduling API
+
+All supervisor endpoints use the authenticated supervisor's department. A client-provided department ID is rejected. All requests use the same short-lived bearer tokens as Phase 2; JSON input examples are available in `/docs`.
+
+| Method | Endpoint | Capability |
+| --- | --- | --- |
+| GET, POST | `/api/supervisor/locations` | List/create locations and explicit eligible-student IDs |
+| GET, PUT | `/api/supervisor/locations/{id}` | Read/update location, description, eligibility, and active status |
+| PATCH | `/api/supervisor/employees/{id}/scheduling` | Set `is_active` for scheduling |
+| GET, POST | `/api/supervisor/requirements` | List/create recurring staffing demand |
+| GET, PUT, DELETE | `/api/supervisor/requirements/{id}` | Read/edit/delete unused requirements; `is_active=false` deactivates |
+| GET, POST | `/api/supervisor/schedules` | List runs/create a new version with `{"week_start":"2026-10-19"}` |
+| GET | `/api/supervisor/schedules/{id}` | Read saved draft, assignments, gaps, and input snapshot |
+| GET | `/api/supervisor/schedules/{id}/unfilled` | Read uncovered time windows, missing counts, and reasons |
+| GET | `/api/supervisor/schedules/{id}/coverage` | Read coverage and employee-minute totals |
+| GET | `/api/supervisor/schedules/{id}/employee-hours` | Read employee assigned-hour totals |
+| GET | `/api/students/me/locations` | View own eligible active department locations |
+| GET | `/api/students/me/schedule` | Own shifts in most recently generated draft; optional Monday `week_start` filter |
+
+`duration_minutes` is the stored duration unit. Gaps include explicit start/end times so partial requirements can be identified. Coverage is assigned staff-minutes divided by required staff-minutes; zero demand reports 100% with an explicit no-demand message. The UI's unfilled-position count refers to 30-minute employee slots, not unique employees or whole requirements.

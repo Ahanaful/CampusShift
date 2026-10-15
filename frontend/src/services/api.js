@@ -51,6 +51,7 @@ export async function api(path, { body, signal, ...options } = {}) {
     if (error.name === "AbortError") throw error;
     throw new Error(
       "Cannot reach CampusShift. Check that the backend is running and try again.",
+      { cause: error },
     );
   } finally {
     clearTimeout(timeout);

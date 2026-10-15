@@ -19,6 +19,7 @@ export function StudentDashboard() {
   const classes = useResource("/students/me/classes");
   const availability = useResource("/students/me/availability");
   const conflicts = useResource("/students/me/conflicts");
+  const schedule = useResource("/students/me/schedule");
   return (
     <>
       <PageHeading title={`Welcome, ${user.full_name.split(" ")[0]}.`}>
@@ -55,14 +56,48 @@ export function StudentDashboard() {
         {conflicts.data && <ConflictList conflicts={conflicts.data} />}
       </ResourceState>
       <section className="panel">
-        <h2>Upcoming shifts</h2>
-        <div className="empty-state">
-          <strong>Your future schedule lives here.</strong>
-          <p>
-            Shift assignments and automatic scheduling are coming in a later
-            phase.
-          </p>
-        </div>
+        <h2>
+          Your draft schedule <span className="coming-soon">Unpublished</span>
+        </h2>
+        <ResourceState resource={schedule}>
+          {schedule.data?.run_id ? (
+            <>
+              <p className="muted">
+                Week of {schedule.data.week_start} ·{" "}
+                {schedule.data.assigned_hours} assigned hours ·{" "}
+                {schedule.data.timezone}
+              </p>
+              {!schedule.data.shifts.length && (
+                <p className="empty-state">
+                  No assignments for you in this draft.
+                </p>
+              )}
+              {schedule.data.shifts.slice(0, 5).map((shift) => (
+                <div className="entry-row" key={shift.id}>
+                  <strong>{shift.location_name}</strong>
+                  <span>
+                    {shift.shift_date} · {timeLabel(shift.start_time)}–
+                    {timeLabel(shift.end_time)}
+                  </span>
+                </div>
+              ))}
+            </>
+          ) : (
+            <p className="empty-state">
+              Your supervisor has not generated a draft yet.
+            </p>
+          )}
+        </ResourceState>
+        <p className="muted">
+          Draft previews are for planning and are not finalized work
+          assignments.
+        </p>
+        <Link
+          className="secondary-button schedule-refresh"
+          to="/student/schedule"
+        >
+          View your draft week →
+        </Link>
       </section>
     </>
   );

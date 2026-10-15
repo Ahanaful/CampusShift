@@ -1,4 +1,4 @@
-# Phase 2 architecture
+# CampusShift architecture (Phase 3)
 
 The React application requests `GET /api/health`. In development Vite forwards `/api` to FastAPI at `http://127.0.0.1:8000`. An optional `VITE_API_BASE_URL` supports independently hosted frontends. FastAPI allows the configured local browser origins through CORS.
 
@@ -12,4 +12,8 @@ Days run Monday (`0`) through Sunday (`6`). Windows are local campus times with 
 
 The health endpoint preserves its Phase 1 liveness contract without opening the database. Database-backed routes return a safe 503 on storage errors. Missing or weak signing configuration disables authentication with 503 while leaving liveness usable.
 
-Future scheduling logic belongs in `scheduler/`, separate from API routes. Infrastructure belongs in `infrastructure/` so sandbox resources can eventually be recreated. Deployment will require a permitted HTTP entry point and existing sandbox roles; API Gateway, Cognito, and creating IAM roles must not be assumed. No AWS integration or automatic scheduling is implemented.
+The pure scheduling engine now lives in `scheduler/` and is installed as a local package. The scheduling service adapts department-scoped relational data into typed engine inputs and persists a full draft transactionally. Locations use explicit eligible-student associations. Active staffing demand cannot overlap at one location. The API stores versioned runs, assigned shifts, uncovered periods, input snapshots, and weighted coverage/hour metrics. The initial data-preserving migration adds active scheduling status and a local timezone to the existing models.
+
+The frontend extends the same sidebar, forms, API client and resource/error states with locations, staffing needs, a generator, and filtered weekly draft calendars. Student dashboards expose only personal draft previews; all schedules remain unpublished and immutable after generation. See [scheduling.md](scheduling.md) for constraints, granularity, fairness, local-time policy, versioning and limitations.
+
+Infrastructure belongs in `infrastructure/` so sandbox resources can eventually be recreated. Deployment will require a permitted HTTP entry point and existing sandbox roles; API Gateway, Cognito, and creating IAM roles must not be assumed. No AWS integration is implemented.

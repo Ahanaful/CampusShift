@@ -41,6 +41,7 @@ class UserOut(BaseModel):
     role: Literal["student", "supervisor"]
     department_id: int
     max_weekly_hours: int
+    is_active: bool
     created_at: datetime
 
 
@@ -58,6 +59,7 @@ class DepartmentOut(BaseModel):
     id: int
     name: str
     description: str
+    timezone: str
 
 
 class WindowInput(Input):

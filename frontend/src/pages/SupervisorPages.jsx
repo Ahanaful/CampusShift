@@ -58,12 +58,19 @@ export function SupervisorDashboard() {
       <section className="panel">
         <h2>Weekly scheduling</h2>
         <div className="empty-state">
-          <strong>A better week starts with the basics.</strong>
+          <strong>Turn staffing needs into a balanced draft.</strong>
           <p>
-            Review your team’s classes and availability in the directory.
-            Scheduling and assigned shifts will arrive in a later phase.
+            Add work locations and eligibility, define staffing needs, then
+            generate a weekly draft that respects your team’s classes,
+            availability and hour limits.
           </p>
         </div>
+        <Link
+          className="action-button schedule-refresh"
+          to="/supervisor/schedules"
+        >
+          Open schedule generator →
+        </Link>
       </section>
     </>
   );
