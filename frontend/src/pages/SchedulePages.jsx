@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import ScheduleEditor from "../components/ScheduleEditor";
+import { ScheduleConflictNotice } from "./TimeOffPages";
 import { api } from "../services/api";
 import {
   ErrorMessage,
@@ -158,6 +161,7 @@ export function ScheduleGenerator() {
         Generate and compare weekly drafts. Every generation saves a new
         version; existing drafts are preserved.
       </PageHeading>
+      <ScheduleConflictNotice refreshKey={run?.version || 0} />
       <section className="panel">
         <h2>Generate a draft</h2>
         <ErrorMessage>{error}</ErrorMessage>
@@ -181,7 +185,7 @@ export function ScheduleGenerator() {
       </section>
       <ResourceState resource={runs}>
         <section className="panel">
-          <Field label="Saved draft version">
+          <Field label="Schedule version history">
             <select
               value={activeId || ""}
               onChange={(event) => {
@@ -193,7 +197,7 @@ export function ScheduleGenerator() {
               <option value="">Choose a saved draft</option>
               {runs.data?.map((item) => (
                 <option key={item.id} value={item.id}>
-                  Week {item.week_start} · Draft #{item.id} ·{" "}
+                  Week {item.week_start} · {item.status} #{item.id} ·{" "}
                   {item.summary.coverage_percent}% coverage
                 </option>
               ))}
@@ -212,11 +216,19 @@ export function ScheduleGenerator() {
           {run && (
             <>
               <div className="message draft-notice">
-                <strong>Draft #{run.id} · Unpublished</strong>
+                <strong>
+                  <span className={`status-badge ${run.status}`}>
+                    {run.status}
+                  </span>{" "}
+                  Schedule #{run.id}
+                </strong>
                 <p>
                   Week of {run.week_start} · {run.summary.timezone} ·{" "}
-                  {run.algorithm_version}. Students can preview the latest saved
-                  draft. This is not a finalized work assignment.
+                  {run.status === "draft"
+                    ? "Unpublished: review and publish to make assignments official."
+                    : run.status === "published"
+                      ? "Current official schedule for this week. Assignments are read-only."
+                      : "Historical schedule, superseded by a newer published version."}
                 </p>
               </div>
               <div className="stat-grid">
@@ -248,7 +260,7 @@ export function ScheduleGenerator() {
                 </p>
               )}
               <section className="panel">
-                <h2>Weekly draft schedule</h2>
+                <h2>Weekly schedule</h2>
                 <div className="window-form">
                   <Field label="Filter by location">
                     <select
@@ -290,6 +302,15 @@ export function ScheduleGenerator() {
                   gaps={visibleGaps}
                 />
               </section>
+              <ScheduleEditor
+                key={`${run.id}-${run.version}`}
+                run={run}
+                runs={runs.data || []}
+                onChange={() => {
+                  detail.reload();
+                  runs.reload();
+                }}
+              />
               <section className="panel">
                 <h2>Unfilled staffing periods</h2>
                 {!run.unfilled.length && (
@@ -330,22 +351,29 @@ export function ScheduleGenerator() {
   );
 }
 
-export function StudentSchedule() {
+export function StudentSchedule({ draft = false }) {
   const [week, setWeek] = useState("");
   const schedule = useResource(
-    "/students/me/schedule" +
+    (draft ? "/students/me/draft-schedule" : "/students/me/schedule") +
       (week ? `?week_start=${encodeURIComponent(week)}` : ""),
   );
   const locations = useResource("/students/me/locations");
   return (
     <>
-      <PageHeading title="Your draft week.">
-        A read-only preview for planning. All shifts shown here are draft /
-        unpublished.
+      <PageHeading
+        title={draft ? "Draft preview — unpublished." : "My schedule."}
+      >
+        {draft
+          ? "Testing preview only. These are not official work assignments."
+          : "Your current published work assignments. Previous versions remain in your department's history."}
       </PageHeading>
       <section className="panel">
         <Field
-          label="Week starts Monday (leave empty for latest draft)"
+          label={
+            draft
+              ? "Week starts Monday (empty for latest draft)"
+              : "Week starts Monday (empty for latest published week)"
+          }
           type="date"
           value={week}
           onChange={(event) => setWeek(event.target.value)}
@@ -361,18 +389,26 @@ export function StudentSchedule() {
         {schedule.data?.run_id ? (
           <>
             <div className="message draft-notice">
-              <strong>Draft #{schedule.data.run_id} · Unpublished</strong>
+              <strong>
+                {draft ? "Draft / unpublished" : "Published schedule"} #
+                {schedule.data.run_id}
+              </strong>
               <p>
                 Week of {schedule.data.week_start} · {schedule.data.timezone}.
-                Your supervisor may generate a newer draft. These shifts are not
-                finalized.
+                {draft
+                  ? "Your supervisor may generate a newer draft. These shifts are not finalized."
+                  : "These are your official assignments. Contact your supervisor if approved leave overlaps a published shift."}
               </p>
             </div>
             <section className="panel">
-              <h2>{schedule.data.assigned_hours} assigned draft hours</h2>
+              <h2>
+                {schedule.data.assigned_hours} assigned {draft ? "draft " : ""}
+                hours
+              </h2>
               {!schedule.data.shifts.length && (
                 <p className="empty-state">
-                  No shifts assigned to you in this draft.
+                  No shifts assigned to you in this{" "}
+                  {draft ? "draft" : "published week"}.
                 </p>
               )}
               <DraftCalendar
@@ -384,11 +420,17 @@ export function StudentSchedule() {
         ) : (
           <section className="panel">
             <p className="empty-state">
-              No draft is available for this week yet.
+              No {draft ? "draft" : "published schedule"} is available for this
+              week yet.
             </p>
           </section>
         )}
       </ResourceState>
+      {!draft && (
+        <Link className="secondary-button" to="/student/draft-schedule">
+          View testing draft preview (unpublished)
+        </Link>
+      )}
       <ResourceState resource={locations}>
         <section className="panel">
           <h2>Your eligible work locations</h2>

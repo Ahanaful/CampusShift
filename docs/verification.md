@@ -1,5 +1,34 @@
 # Verification
 
+## Phase 5
+
+Executed locally on Windows using Python 3.12 and Node.js 22.22.0:
+
+- Applied additive attendance migration `9e57ab896061`; `alembic check` passed. Existing Phase 1–4 workflows and migration-preservation tests remain passing.
+- **74 backend tests passed**. New checks include server-generated clock timestamps, published-shift ownership, early/late eligibility, duplicate/active constraints, clock-out authorization, private history, correction approval/rejection/staleness, overlap prevention at request and approval, audit/record rollback, archived-shift attendance retention, department-scoped reports/CSV, spreadsheet formula escaping, UTC storage, real concurrent clock-ins, midnight/weekly boundary clipping, early clock-in on a preceding local date, and daylight-saving fold/gap behavior.
+- A fall-back shift recorded three actual elapsed hours versus two scheduled wall-clock hours. A spring-forward interval resolved to one elapsed hour versus two wall-clock hours. Correction inputs can select the second repeated local hour; nonexistent spring times are rejected.
+- **15 independent scheduler tests passed** unchanged.
+- Frontend lint and production build passed with the attendance pages, CSV client support, department-local timezone abbreviations, and polling that preserves correction input options.
+- A live HTTP scenario through Vite created a temporary department, generated and published a currently eligible shift, clocked in/out using the real server clock, rejected a duplicate clock-in, showed supervisor active attendance, approved a correction, inspected original-value audit history, exported CSV as supervisor and rejected student export. Attendance SPA routes returned 200. Only isolated test data was removed afterward; existing application records were preserved.
+- Backend import reported CampusShift API 0.5.0. Database, `.env`, dependency folders and portable tooling remain ignored by Git. No cloud resources, commits or pushes were created.
+
+The local API and Vite server were left running. Browser automation was unavailable, so clicking the forms/buttons/export download and checking responsive appearance remain manual QA tasks. Reports are currently unpaginated, active totals are 30-second server snapshots, and correction proposals have a documented 24-hour limit. No GPS, biometrics, payroll/wage calculations or email/SMS were introduced.
+
+## Phase 4
+
+Executed locally on Windows with Python 3.12 and Node.js 22.22.0:
+
+- Applied `fab90f5980a1` to the local SQLite database. `alembic check` passed. Migration tests preserved original Phase 2 users and Phase 3 schedule/assignment data, verified FK integrity, and exercised a Phase 3→4→3→4 round trip without data loss for drafts.
+- **48 backend tests passed**, including Phase 1–3 regressions and new leave lifecycle, filtering, UTC audit timestamps, cancellation, ownership/department/role isolation, approved-only generation constraints, late-approval warnings, manual edit validation, capacity, hours, class/availability/eligibility/leave conflicts, double booking, stale revision rejection, rollback, publication acknowledgements, official student visibility, archival history and unique current publication tests.
+- A real two-thread file-backed SQLite edit test accepted one edit and rejected the stale edit with 409. A direct duplicate-publication database update failed the partial unique index. Simulated persistence/audit failures preserved the original draft or published version.
+- **15 independent scheduler tests passed**, including inclusive approved-leave date boundaries and invalid approved date ranges, with the original availability/hour/fairness/eligibility tests intact.
+- `npm run lint` and `npm run build` passed for the final frontend source.
+- Live HTTP checks through Vite passed leave submission/approval, existing-assignment warnings, reassignment/removal/refill, rejection of unacknowledged gaps, publication, current official student visibility, explicit replacement publication/archive, and audit retrieval. Late approval over the replacement's shifts produced supervisor warnings while student published hours remained unchanged. New SPA routes returned 200. Temporary smoke accounts and their isolated department/data were removed; existing application records were preserved.
+
+The API and Vite server were started and left running on ports 8000 and 5173. No AWS resources, commits, pushes, or external messages were created.
+
+Limitations: browser rendering, clicking forms/menus/filters, publication checkbox interactions, and responsive appearance were not exercised in a browser because browser automation was unavailable. Supervisor warnings update on decision/navigation or explicit refresh, not push delivery. Final leave decisions cannot be reversed in this phase. Existing published assignments are preserved when later leave is approved, so supervisors must explicitly publish a reviewed replacement. Scheduler granularity, heuristic optimality and local wall-clock/DST assumptions remain as documented.
+
 ## Phase 3
 
 Executed on Windows using Python 3.12 and Node.js 22.22.0:

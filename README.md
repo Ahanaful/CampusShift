@@ -1,6 +1,6 @@
 ﻿# CampusShift
 
-CampusShift helps university departments coordinate student employees, class commitments, and work availability. Phase 3 adds work locations, explicit employee eligibility, recurring staffing requirements, and automatic weekly draft scheduling. Accounts, profiles, class/availability management, the landing page, and the health endpoint remain available.
+CampusShift helps university departments coordinate student employees, class commitments, and work availability. Phase 5 adds published-shift clock-in/out, actual attendance hours, supervisor monitoring, audited correction approvals, and CSV export. Scheduling, time off, editing, publishing, authentication, profiles and the landing page remain available.
 
 ## Technology and prerequisites
 
@@ -151,9 +151,9 @@ docs/                 Architecture and verification notes
 
 This phase uses bearer access tokens in memory; sign-out clears the client token, and any previously copied token remains valid until expiration. There is no token revocation, refresh flow, password reset, email verification, or deployment hardening such as login rate limiting. This is a local development implementation. All authorization is enforced in the backend even if frontend route protection is bypassed.
 
-AWS Academy Cloud Architecting 3 Sandbox supports the listed Lambda, DynamoDB, S3, CloudFront, EC2, CloudFormation, CloudWatch, and RDS services, subject to sandbox permissions. API Gateway and Cognito are unavailable; IAM is read-only. Resources and data may disappear between sessions, so future infrastructure must be reproducible from code. This phase uses no AWS services and creates no cloud resources. DynamoDB, time-off, supervisor shift editing, shift swaps/publishing, notifications, payroll, and analytics remain out of scope.
+AWS Academy Cloud Architecting 3 Sandbox supports the listed Lambda, DynamoDB, S3, CloudFront, EC2, CloudFormation, CloudWatch, and RDS services, subject to sandbox permissions. API Gateway and Cognito are unavailable; IAM is read-only. Resources and data may disappear between sessions, so future infrastructure must be reproducible from code. This phase uses no AWS services and creates no cloud resources. DynamoDB, shift swaps, email notifications, payroll, and advanced analytics remain out of scope.
 
-Next: Phase 4 supervisor review and formal publication, including how input changes invalidate a draft, before selecting a permitted sandbox deployment design.
+Next: deployment preparation, stronger authentication/session controls, notification delivery and report pagination, using a permitted reproducible sandbox architecture.
 
 ## Phase 3 weekly scheduling demo
 
@@ -183,7 +183,7 @@ npm run dev
 3. Inspect **Staffing needs**. Add, edit, deactivate, or delete recurring requirements. Active requirements at one location must not overlap. Requirements referenced by saved drafts cannot be deleted; deactivate them to preserve history. Deactivated locations suppress their staffing requirements in new generations.
 4. Open **Schedule generator**, select Monday **2026-10-19**, and generate. Review employee-minute coverage, assigned hours, amber understaffed periods, explanations, and employee totals. Filter the calendar by location or student. Metrics always describe the whole draft; location gaps remain visible while filtering by employee.
 5. Generate again to create another draft version. Earlier versions remain selectable and unchanged. Repeated generations do not add together or consume hours from other versions.
-6. Sign out, then sign in as `avery.schedule@example.com`, `jordan.schedule@example.com`, or `sam.schedule@example.com` using the same chosen password. The dashboard and **Draft schedule** page show only that student's assignments from the latest draft. Students cannot edit shifts. Every preview is explicitly draft/unpublished, never a finalized assignment.
+6. Sign out, then sign in as `avery.schedule@example.com`, `jordan.schedule@example.com`, or `sam.schedule@example.com` using the same chosen password. **My schedule** and the dashboard show only published assignments. The separate **testing draft preview (unpublished)** link preserves Phase 3 previews without representing them as official work. Students cannot edit shifts.
 
 All recurring windows are campus-local wall-clock time. Departments default to `America/Chicago`, stored on the department and copied into each draft. The engine uses calendar dates and integer minutes, never converts these windows to UTC, and counts local wall-clock minutes even across daylight saving transitions. `created_at` is a separate UTC audit timestamp. Week start must be Monday. Overnight windows are rejected. Staffing times use :00/:30 boundaries; class and availability entries retain minute precision. A complete 30-minute staffing slot must fit submitted availability without any class conflict. Partial slots remain uncovered; zero-hour students receive no shifts.
 
@@ -215,6 +215,107 @@ All supervisor endpoints use the authenticated supervisor's department. A client
 | GET | `/api/supervisor/schedules/{id}/coverage` | Read coverage and employee-minute totals |
 | GET | `/api/supervisor/schedules/{id}/employee-hours` | Read employee assigned-hour totals |
 | GET | `/api/students/me/locations` | View own eligible active department locations |
-| GET | `/api/students/me/schedule` | Own shifts in most recently generated draft; optional Monday `week_start` filter |
+| GET | `/api/students/me/schedule` | Own current published shifts; optional Monday `week_start` filter; empty defaults to newest published week |
+| GET | `/api/students/me/draft-schedule` | Explicit unpublished testing preview; optional Monday `week_start` filter |
 
 `duration_minutes` is the stored duration unit. Gaps include explicit start/end times so partial requirements can be identified. Coverage is assigned staff-minutes divided by required staff-minutes; zero demand reports 100% with an explicit no-demand message. The UI's unfilled-position count refers to 30-minute employee slots, not unique employees or whole requirements.
+
+## Phase 4: leave, manual review and publication
+
+The local SQLite migration preserves existing Phase 3 drafts and assignments, adds leave/audit tables, permits draft/published/archived statuses, adds optimistic revision numbers and publishing audit fields, and enforces one current published run per department/week with a partial unique index. Keep useful local database backups before applying migrations. Downgrade is deliberately refused if published/archived history exists; migration rollback must not silently turn official assignments back into drafts.
+
+Upgrade an existing checkout and start the backend from the repository root:
+
+```powershell
+backend\.venv\Scripts\python.exe -m pip install -r backend/requirements-dev.txt
+backend\.venv\Scripts\python.exe -m pip install -e .
+cd backend
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+In a separate terminal from the root:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Open <http://127.0.0.1:5173>. Use the existing accounts or initialize the deterministic scheduling demo from `backend/`:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.seed_scheduling --demo
+```
+
+The seed prompts for passwords and never runs automatically. Existing `.env` and account passwords remain unchanged.
+
+Demonstration workflow:
+
+1. As `avery.schedule@example.com`, open **My time off** and submit November 16, 2026 through November 16, 2026, optionally giving a reason. A request starts pending. Pending requests can be cancelled by their owner; approved/rejected/cancelled records remain in history.
+2. As `scheduling.supervisor@example.com`, open **Time-off management**. Filter by status or overlapping date range, approve or reject a pending request, and optionally add a note. Reviewer and UTC decision timestamps are recorded. Decisions are final in this phase; students cannot approve requests.
+3. In **Schedule generator**, generate Monday `2026-11-16`. Approved all-day leave blocks every included local date; pending/rejected/cancelled requests do not. Existing availability, classes, eligibility, hour caps and double-booking rules remain enforced.
+4. Review the draft. Reassign a saved shift, remove an assignment, or fill all/part of an uncovered period in 30-minute intervals. The backend immediately validates current student inputs and updates coverage, gaps, hours, revision and audit history atomically. Invalid edits leave the draft unchanged. If another supervisor edited the version, refresh before retrying.
+5. Review validation warnings. Publishing rechecks all assignments against current leave and other constraints. Changed staffing demand requires generating a new draft. If coverage is incomplete, explicitly acknowledge uncovered employee-hours, then check the review confirmation and publish.
+6. Sign in as a student and open **My schedule**: only that student's assignments in the current published version appear. Select the Monday to view a particular week. Without a filter, the newest published week is shown. Draft testing previews remain separate.
+7. Generate and publish a replacement for the same week. The prior published version and all assignments are archived atomically and remain visible in supervisor version history. Published and archived schedules are read-only.
+8. To test late leave approval, approve a request covering an existing assigned date. Supervisor dashboard/time-off/schedule pages show conflict warnings on load or refresh. Existing assignments and published status remain unchanged. Fix a draft directly, or generate, review and publish a replacement for an official schedule. There are no email or push notifications in this phase.
+
+Scheduling uses department-local calendar dates (`America/Chicago` by default); leave dates include both endpoints. Audit timestamps are UTC and serialized with timezone information. Editing/publishing use the same pure `assignment_error` hard-constraint function as generation. Coverage is recalculated from fixed saved demand without running a second scheduling algorithm. Staffing changes require a fresh generation; current student constraints are always rechecked. See [Phase 4 design and endpoints](docs/workflows.md).
+
+Run verification:
+
+```powershell
+backend\.venv\Scripts\python.exe -m unittest discover -s scheduler/tests -v
+cd backend
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m alembic check
+cd ../frontend
+npm run lint
+npm run build
+```
+
+## Phase 5: time and attendance
+
+Upgrade the existing local environment from the repository root (the migration preserves existing schedule and leave data):
+
+```powershell
+backend\.venv\Scripts\python.exe -m pip install -r backend/requirements-dev.txt
+backend\.venv\Scripts\python.exe -m pip install -e .
+cd backend
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Start the frontend in a separate terminal from the root:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Open <http://127.0.0.1:5173>. Existing `.env` files and passwords are preserved. `backend/.env.example` adds optional attendance policy settings:
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `CLOCK_IN_EARLY_MINUTES` | 15 | How early a student can clock in before scheduled start |
+| `CLOCK_IN_LATE_MINUTES` | 30 | How late a student can clock in after scheduled start |
+| `ATTENDANCE_LATE_GRACE_MINUTES` | 5 | Grace before a recorded clock-in is flagged late |
+
+Values must be 0–240 minutes. Restart the API after changing settings. The clock-in window includes its opening boundary and its late boundary, but always closes before shift end. A missing clock-in after the window closes must use the correction process. No endpoint accepts a student-supplied actual clock timestamp.
+
+Demonstrate attendance:
+
+1. Use existing accounts, or initialize the scheduling demo with `.\.venv\Scripts\python.exe -m app.seed_scheduling --demo` from `backend/` and privately choose passwords.
+2. As supervisor, create or use a staffing window around the current department-local time, ensure the student is eligible and available, generate the current Monday week, and publish it. The seed's daytime windows are not automatically eligible for clock-in at night; choose an appropriate upcoming shift and clock in when its window opens. Same-day scheduling's existing 23:30 latest end boundary still applies.
+3. As that student, open **My attendance**. Review the next shift and today's shifts, then **Clock in**. Only that student's current published shift is eligible. Duplicate attempts or a second simultaneous clock-in are rejected. The API uses its own current UTC time.
+4. Open the supervisor's **Attendance management** view. The active employee list refreshes every 30 seconds and on manual refresh. Filter record history by student, scheduled local shift date or status; compare planned wall-clock hours with actual elapsed hours, and inspect late/missed indicators. Active records stay visible regardless of date/status filters.
+5. As student, **Clock out**. Clock-out remains possible if the schedule has since been replaced, and may occur after midnight. Actual weekly hours are clipped to the department-local Monday–Sunday week, including active elapsed time. They are separate from planned schedule hours and do not truncate real work to scheduler hour caps.
+6. Submit a correction for missed or incorrect times. Select the original shift, enter proposed times in the displayed department timezone, choose first/second occurrence only if using a repeated DST hour, and explain the correction. Missing clock-in/out requests require the scheduled shift to have ended. Proposals must be in the past, positive, at most 24 elapsed hours, and start on the original local shift date (or preceding night if work continues past scheduled start). Midnight-crossing clock-out is supported.
+7. As supervisor, approve or reject the request in the correction queue. Approval revalidates overlaps and record revision, changes the working attendance values atomically, and retains before/after timestamps, supervisor identity and decision time in the audit history. A stale proposal must be rejected and resubmitted. Missing-clock-in requests use a zero-hour `missing` placeholder until approved; pending/rejected proposals never count as worked time.
+8. Export the filtered attendance records as CSV. Export uses authenticated department scope; students cannot access it. The file uses UTC clock timestamps and includes the department timezone, scheduled/actual hours, original shift IDs, and schedule status. Spreadsheet formula prefixes in names are neutralized.
+
+Attendance remains linked to its original assigned shift when another schedule version is published; history is not moved or deleted. All new persisted timestamps use canonical ISO UTC strings with an explicit `Z` and deserialize as aware UTC datetimes. The frontend displays department-local times with timezone abbreviations (for example CST/CDT). DST gaps are rejected; ambiguous scheduled times use the first occurrence, while correction forms support an explicit second occurrence. Actual hours use UTC elapsed duration, so a DST-transition shift can differ from planned wall-clock duration.
+
+See [attendance design and API endpoints](docs/attendance.md). Run the complete verification commands in the previous section; attendance tests are included in backend discovery. No AWS, DynamoDB, GPS, biometrics, payroll/wage calculations, or email/SMS delivery is implemented.

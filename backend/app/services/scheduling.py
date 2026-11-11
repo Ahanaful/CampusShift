@@ -8,7 +8,24 @@ from sqlalchemy import select, text
 from app.models import (AssignedShift, Department,
                         LocationEligibility, ScheduleRun, StaffingRequirement,
                         UnfilledRequirement, User, WorkLocation)
-from scheduler.engine import (ALGORITHM_VERSION, Requirement, Student, Window, generate)
+from app.models import TimeOffRequest
+from scheduler.engine import (ALGORITHM_VERSION, DateRange, Requirement, Student, Window, generate)
+
+
+def student_inputs(db, department_id, history=None):
+    history = history or {}
+    people = list(db.scalars(select(User).where(User.department_id == department_id, User.role == "student").order_by(User.id)))
+    work_locations = list(db.scalars(select(WorkLocation).where(WorkLocation.department_id == department_id, WorkLocation.is_active.is_(True))))
+    leaves = list(db.scalars(select(TimeOffRequest).where(TimeOffRequest.department_id == department_id, TimeOffRequest.status == "approved")))
+    inputs = tuple(Student(
+        id=person.id, department_id=person.department_id, max_minutes=person.max_weekly_hours * 60,
+        active=person.is_active, prior_minutes=history.get(str(person.id), 0),
+        eligible_locations=frozenset(item.id for item in work_locations if any(e.student_id == person.id for e in item.eligibility)),
+        classes=tuple(Window(w.day_of_week, minutes(w.start_time), minutes(w.end_time)) for w in person.classes),
+        availability=tuple(Window(w.day_of_week, minutes(w.start_time), minutes(w.end_time)) for w in person.availability),
+        approved_time_off=tuple(DateRange(leave.start_date, leave.end_date) for leave in leaves if leave.student_id == person.id),
+    ) for person in people)
+    return people, work_locations, inputs
 
 
 def update_student_status(db, supervisor, student_id, is_active):
@@ -137,20 +154,12 @@ def generate_run(db, supervisor, week_start):
     reserve_write(db)
     department_id = supervisor.department_id
     department = db.get(Department, department_id)
-    people = list(db.scalars(select(User).where(User.department_id == department_id, User.role == "student").order_by(User.id)))
-    work_locations = list(db.scalars(select(WorkLocation).where(WorkLocation.department_id == department_id, WorkLocation.is_active.is_(True))))
-    location_map = {item.id: item for item in work_locations}
-    staffing = [r for r in requirements(db, department_id) if r.is_active and r.location_id in location_map]
     previous = db.scalar(select(ScheduleRun).where(ScheduleRun.department_id == department_id, ScheduleRun.week_start < week_start)
                          .order_by(ScheduleRun.week_start.desc(), ScheduleRun.id.desc()).limit(1))
     history = previous.summary.get("employee_minutes", {}) if previous else {}
-    inputs = tuple(Student(
-        id=person.id, department_id=person.department_id, max_minutes=person.max_weekly_hours * 60,
-        active=person.is_active, prior_minutes=history.get(str(person.id), 0),
-        eligible_locations=frozenset(item.id for item in work_locations if any(e.student_id == person.id for e in item.eligibility)),
-        classes=tuple(Window(w.day_of_week, minutes(w.start_time), minutes(w.end_time)) for w in person.classes),
-        availability=tuple(Window(w.day_of_week, minutes(w.start_time), minutes(w.end_time)) for w in person.availability),
-    ) for person in people)
+    people, work_locations, inputs = student_inputs(db, department_id, history)
+    location_map = {item.id: item for item in work_locations}
+    staffing = [r for r in requirements(db, department_id) if r.is_active and r.location_id in location_map]
     demand = tuple(Requirement(r.id, r.department_id, r.location_id, r.day_of_week,
                               minutes(r.start_time), minutes(r.end_time), r.required_count) for r in staffing)
     try:
@@ -164,6 +173,7 @@ def generate_run(db, supervisor, week_start):
                "input_snapshot": {
                    "students": [{"id": s.id, "active": s.active, "max_minutes": s.max_minutes,
                        "eligible_locations": sorted(s.eligible_locations), "prior_minutes": s.prior_minutes,
+                       "approved_time_off": [[leave.start.isoformat(), leave.end.isoformat()] for leave in s.approved_time_off],
                        "classes": [[w.day, w.start, w.end] for w in s.classes],
                        "availability": [[w.day, w.start, w.end] for w in s.availability]} for s in inputs],
                    "requirements": [{"id": r.id, "location_id": r.location_id, "day": r.day,
@@ -193,18 +203,23 @@ def run_detail(run):
     return {"id": run.id, "department_id": run.department_id, "week_start": run.week_start,
             "status": run.status, "created_by": run.created_by, "created_at": run.created_at,
             "algorithm_version": run.algorithm_version, "summary": run.summary,
+            "version": run.version, "published_by": run.published_by, "published_at": run.published_at,
+            "uncovered_acknowledged": run.uncovered_acknowledged,
             "shifts": sorted(run.shifts, key=lambda s: (s.shift_date, s.start_time, s.location_id, s.student_id)),
             "unfilled": sorted(run.unfilled, key=lambda u: (u.shift_date, u.start_time, u.location_id, u.id))}
 
 
-def student_preview(db, student, week_start=None):
-    query = select(ScheduleRun).where(ScheduleRun.department_id == student.department_id)
+def student_preview(db, student, week_start=None, draft=False):
+    status = "draft" if draft else "published"
+    query = select(ScheduleRun).where(ScheduleRun.department_id == student.department_id, ScheduleRun.status == status)
     if week_start:
         query = query.where(ScheduleRun.week_start == week_start)
-    run = db.scalar(query.order_by(ScheduleRun.created_at.desc(), ScheduleRun.id.desc()).limit(1))
+    ordering = (ScheduleRun.created_at.desc(), ScheduleRun.id.desc()) if draft else (
+        ScheduleRun.week_start.desc(), ScheduleRun.published_at.desc(), ScheduleRun.id.desc())
+    run = db.scalar(query.order_by(*ordering).limit(1))
     if run is None:
-        return {"run_id": None, "week_start": week_start, "status": "draft", "timezone": db.get(Department, student.department_id).timezone,
+        return {"run_id": None, "week_start": week_start, "status": status, "timezone": db.get(Department, student.department_id).timezone,
                 "assigned_hours": 0, "shifts": []}
     shifts = sorted((s for s in run.shifts if s.student_id == student.id), key=lambda s: (s.shift_date, s.start_time, s.id))
-    return {"run_id": run.id, "week_start": run.week_start, "status": "draft", "timezone": run.summary["timezone"],
+    return {"run_id": run.id, "week_start": run.week_start, "status": status, "timezone": run.summary["timezone"],
             "assigned_hours": sum(s.duration_minutes for s in shifts) / 60, "shifts": shifts}

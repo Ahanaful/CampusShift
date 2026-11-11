@@ -13,7 +13,9 @@ export default function DashboardLayout() {
           [root + "/classes", "My classes"],
           [root + "/availability", "My availability"],
           [root + "/profile", "My profile"],
-          [root + "/schedule", "Draft schedule"],
+          [root + "/schedule", "My schedule"],
+          [root + "/time-off", "My time off"],
+          [root + "/attendance", "My attendance"],
         ]
       : [
           [root, "Overview"],
@@ -21,6 +23,8 @@ export default function DashboardLayout() {
           [root + "/locations", "Work locations"],
           [root + "/requirements", "Staffing needs"],
           [root + "/schedules", "Schedule generator"],
+          [root + "/time-off", "Time-off management"],
+          [root + "/attendance", "Attendance management"],
         ];
   return (
     <div className="dashboard-shell">
@@ -69,7 +73,7 @@ export default function DashboardLayout() {
               ? "Student workspace"
               : "Department workspace"}
           </span>
-          <span>Phase 03</span>
+          <span>Phase 05</span>
         </div>
         <Outlet />
       </main>

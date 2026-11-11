@@ -10,6 +10,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import router
 from app.api.scheduling import router as scheduling_router
+from app.api.workflows import router as workflows_router
+from app.api.attendance import router as attendance_router
 from app.core.config import Settings
 from app.db.session import create_session_factory
 
@@ -25,7 +27,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         yield
         engine.dispose()
 
-    app = FastAPI(title="CampusShift API", version="0.3.0", lifespan=lifespan)
+    app = FastAPI(title="CampusShift API", version="0.5.0", lifespan=lifespan)
     app.state.settings = settings
     app.state.engine = engine
     app.state.session_factory = factory
@@ -51,6 +53,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(router)
     app.include_router(scheduling_router)
+    app.include_router(workflows_router)
+    app.include_router(attendance_router)
     return app
 
 

@@ -1,4 +1,4 @@
-# CampusShift architecture (Phase 3)
+# CampusShift architecture (Phase 5)
 
 The React application requests `GET /api/health`. In development Vite forwards `/api` to FastAPI at `http://127.0.0.1:8000`. An optional `VITE_API_BASE_URL` supports independently hosted frontends. FastAPI allows the configured local browser origins through CORS.
 
@@ -17,3 +17,11 @@ The pure scheduling engine now lives in `scheduler/` and is installed as a local
 The frontend extends the same sidebar, forms, API client and resource/error states with locations, staffing needs, a generator, and filtered weekly draft calendars. Student dashboards expose only personal draft previews; all schedules remain unpublished and immutable after generation. See [scheduling.md](scheduling.md) for constraints, granularity, fairness, local-time policy, versioning and limitations.
 
 Infrastructure belongs in `infrastructure/` so sandbox resources can eventually be recreated. Deployment will require a permitted HTTP entry point and existing sandbox roles; API Gateway, Cognito, and creating IAM roles must not be assumed. No AWS integration is implemented.
+
+Phase 4 extends this design with department-scoped `TimeOffRequest` records and `ScheduleEvent` audit history. Approved all-day leave is added to the existing pure student input. Generation, manual editing and publication share `assignment_error`; fixed assignments share `summarize` for coverage and gaps. Manual edits use SQLite write reservations and required revision checks, with atomic summary/audit updates.
+
+Publication revalidates current constraints, requires explicit acknowledgement of gaps, and atomically archives the previous official version. A partial unique index enforces one published schedule per department/week. Official student views now select only published versions, while Phase 3 draft previews are kept at an explicit unpublished endpoint. Late approved leave creates visible supervisor conflict warnings without modifying published assignments. See [workflows.md](workflows.md) for endpoint contracts, states, audit behavior and limitations.
+
+Phase 5 adds attendance records tied permanently to original assigned shifts, correction proposals and before/after audit events. New attendance timestamps use canonical UTC text with explicit Z through a shared SQLAlchemy type, while published local shift windows convert with ZoneInfo/tzdata and explicit DST policies. Clock actions use server time, owner/published-shift validation and configured eligibility windows. Unique/partial indexes and SQLite write reservations prevent duplicate or simultaneous active clock-ins. Corrections are approved atomically with overlap and record-version validation; pending requests never alter actual hours.
+
+The same API client now supports authenticated CSV text downloads. Student and supervisor attendance pages poll active state, distinguish planned wall-clock hours from actual elapsed hours, show department-local timestamps, expose correction review/audit, and retain attendance on archived publications. No GPS/device collection, wage processing, AWS deployment or notification delivery was introduced. See [attendance.md](attendance.md) for workflow, reporting semantics and endpoint details.

@@ -167,14 +167,14 @@ class SchedulingApiTests(unittest.TestCase):
 
     def test_student_preview_only_own_shifts_and_latest_version(self):
         self.scenario()
-        self.assertIsNone(self.request("GET", "/students/me/schedule").json()["run_id"])
+        self.assertIsNone(self.request("GET", "/students/me/draft-schedule").json()["run_id"])
         first = self.generate()
         second = self.generate()
-        preview = self.request("GET", "/students/me/schedule").json()
+        preview = self.request("GET", "/students/me/draft-schedule").json()
         self.assertEqual(preview["run_id"], second["id"])
         self.assertTrue(all(shift["student_id"] == 1 for shift in preview["shifts"]))
         self.assertNotIn("summary", preview)
-        self.assertIsNone(self.request("GET", "/students/me/schedule", user_id=3).json()["run_id"])
+        self.assertIsNone(self.request("GET", "/students/me/draft-schedule", user_id=3).json()["run_id"])
         self.assertEqual(self.request("GET", "/students/me/schedule?week_start=2026-10-20").status_code, 422)
         self.assertEqual(self.request("PUT", f"/supervisor/schedules/{first['id']}", json={}).status_code, 405)
 
@@ -217,6 +217,38 @@ class SchedulingApiTests(unittest.TestCase):
 
 
 class UpgradePreservationTests(unittest.TestCase):
+    def test_phase3_schedule_and_assignment_survive_phase4_migration(self):
+        with TemporaryDirectory(dir=BACKEND_DIR) as directory:
+            url = "sqlite:///" + str(Path(directory) / "phase3.db")
+            with patch.dict(os.environ, {"DATABASE_URL": url}):
+                config = Config(str(BACKEND_DIR / "alembic.ini"))
+                command.upgrade(config, "509aa75b1592")
+                engine, _ = create_session_factory(url)
+                with engine.begin() as conn:
+                    statements = [
+                        "INSERT INTO departments (id,name,description) VALUES (1,'History','Existing')",
+                        "INSERT INTO users (id,full_name,email,password_hash,role,department_id,max_weekly_hours,created_at) VALUES (1,'Student','history@example.com','hash','student',1,20,'2026-01-01')",
+                        "INSERT INTO work_locations (id,department_id,name,description,is_active) VALUES (1,1,'Desk','Existing',1)",
+                        "INSERT INTO staffing_requirements (id,department_id,location_id,day_of_week,start_time,end_time,required_count,is_active) VALUES (1,1,1,0,'09:00:00','10:00:00',1,1)",
+                        "INSERT INTO schedule_runs (id,department_id,week_start,status,created_by,created_at,algorithm_version,summary) VALUES (1,1,'2026-10-19','draft',1,'2026-01-01','old','{}')",
+                        "INSERT INTO assigned_shifts (id,schedule_run_id,student_id,location_id,requirement_id,shift_date,start_time,end_time,duration_minutes,status,student_name,location_name) VALUES (1,1,1,1,1,'2026-10-19','09:00:00','10:00:00',60,'draft','Student','Desk')",
+                    ]
+                    for statement in statements:
+                        conn.exec_driver_sql(statement)
+                engine.dispose()
+                command.upgrade(config, "head")
+                engine, factory = create_session_factory(url)
+                with factory() as db:
+                    self.assertEqual(db.get(ScheduleRun, 1).version, 1)
+                    self.assertEqual(db.get(AssignedShift, 1).duration_minutes, 60)
+                    self.assertEqual(db.get(AssignedShift, 1).student_name, "Student")
+                with engine.connect() as conn:
+                    self.assertEqual(conn.exec_driver_sql("PRAGMA foreign_key_check").fetchall(), [])
+                engine.dispose()
+                command.check(config)
+                command.downgrade(config, "509aa75b1592")
+                command.upgrade(config, "head")
+
     def test_phase2_users_survive_additive_migration(self):
         with TemporaryDirectory(dir=BACKEND_DIR) as directory:
             url = "sqlite:///" + str(Path(directory) / "upgrade.db")

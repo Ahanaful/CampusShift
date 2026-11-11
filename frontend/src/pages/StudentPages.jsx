@@ -57,7 +57,7 @@ export function StudentDashboard() {
       </ResourceState>
       <section className="panel">
         <h2>
-          Your draft schedule <span className="coming-soon">Unpublished</span>
+          My schedule <span className="coming-soon">Published assignments</span>
         </h2>
         <ResourceState resource={schedule}>
           {schedule.data?.run_id ? (
@@ -69,7 +69,7 @@ export function StudentDashboard() {
               </p>
               {!schedule.data.shifts.length && (
                 <p className="empty-state">
-                  No assignments for you in this draft.
+                  No assignments for you in this published week.
                 </p>
               )}
               {schedule.data.shifts.slice(0, 5).map((shift) => (
@@ -84,19 +84,19 @@ export function StudentDashboard() {
             </>
           ) : (
             <p className="empty-state">
-              Your supervisor has not generated a draft yet.
+              Your supervisor has not published a schedule yet.
             </p>
           )}
         </ResourceState>
         <p className="muted">
-          Draft previews are for planning and are not finalized work
-          assignments.
+          Only the current published version appears here. Contact your
+          supervisor about any conflicts.
         </p>
         <Link
           className="secondary-button schedule-refresh"
           to="/student/schedule"
         >
-          View your draft week →
+          View my schedule →
         </Link>
       </section>
     </>

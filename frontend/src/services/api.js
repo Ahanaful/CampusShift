@@ -14,7 +14,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function api(path, { body, signal, ...options } = {}) {
+export async function api(
+  path,
+  { body, signal, responseType, ...options } = {},
+) {
   const controller = new AbortController();
   const abort = () => controller.abort();
   if (signal?.aborted) controller.abort();
@@ -32,6 +35,7 @@ export async function api(path, { body, signal, ...options } = {}) {
       signal: controller.signal,
     });
     if (response.status === 204) return null;
+    if (response.ok && responseType === "text") return await response.text();
     const data = await response.json().catch(() => null);
     if (!response.ok) {
       if (response.status === 401 && accessToken) onUnauthorized();

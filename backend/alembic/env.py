@@ -15,8 +15,19 @@ else:
     engine, _ = create_session_factory(Settings.from_env().database_url)
     try:
         with engine.connect() as connection:
+            sqlite = connection.dialect.name == "sqlite"
+            if sqlite:
+                # Batch migrations rebuild referenced tables. Disable enforcement
+                # only on this migration connection, then verify every FK below.
+                connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+                connection.commit()
             context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
             with context.begin_transaction():
                 context.run_migrations()
+            if sqlite:
+                if connection.exec_driver_sql("PRAGMA foreign_key_check").fetchall():
+                    raise RuntimeError("Migration failed foreign-key consistency check")
+                connection.commit()
+                connection.exec_driver_sql("PRAGMA foreign_keys=ON")
     finally:
         engine.dispose()

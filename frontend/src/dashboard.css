@@ -548,3 +548,126 @@ fieldset {
     min-width: calc(50% - 16px);
   }
 }
+.status-badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: #eef0e5;
+  color: #53634d;
+}
+.status-badge.pending,
+.status-badge.draft {
+  background: #fff0ce;
+  color: #795b1c;
+}
+.status-badge.approved,
+.status-badge.published {
+  background: #e1efda;
+  color: #305b2f;
+}
+.status-badge.rejected {
+  background: #fbe2da;
+  color: #873f31;
+}
+.status-badge.cancelled,
+.status-badge.archived {
+  background: #e9ebe6;
+  color: #677262;
+}
+.leave-entry {
+  padding: 18px 0;
+  border-bottom: 1px solid #e0e5d9;
+}
+.leave-entry .entry-row {
+  border-top: 0;
+  padding: 0 0 10px;
+}
+.edit-shift-row {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 18px 0;
+  border-bottom: 1px solid #e0e5d9;
+}
+.edit-shift-row > div:first-child {
+  flex: 1;
+  min-width: 220px;
+  font-size: 12px;
+}
+.edit-shift-row .field {
+  max-width: 230px;
+}
+.publish-review {
+  margin-top: 28px;
+  padding: 22px;
+  border: 1px solid #d1dbae;
+  border-radius: 7px;
+  background: #f3f6e8;
+  display: grid;
+  gap: 18px;
+}
+.publish-review h3 {
+  margin: 0;
+}
+.publish-review .action-button {
+  justify-self: start;
+}
+.attendance-table-wrap {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+.attendance-table th {
+  padding: 12px;
+  background: #eff2e8;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.attendance-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #e1e5d9;
+  vertical-align: top;
+  min-width: 110px;
+}
+.attendance-table td span {
+  display: block;
+  font-size: 10px;
+  color: #6e7c70;
+  margin-top: 5px;
+}
+.attendance-table td .status-badge {
+  display: inline-flex;
+}
+.attendance-audit {
+  padding: 12px 0;
+  border-bottom: 1px solid #d8dfcf;
+  font-size: 12px;
+}
+.status-badge.active {
+  background: #dcefd7;
+  color: #2e5b30;
+}
+.status-badge.completed,
+.status-badge.corrected {
+  background: #e2e9f5;
+  color: #36547e;
+}
+.status-badge.missing {
+  background: #fbe2da;
+  color: #873f31;
+}
+.sidebar nav {
+  overflow-y: auto;
+}
+.sidebar-account {
+  flex-shrink: 0;
+}

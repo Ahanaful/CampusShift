@@ -23,6 +23,8 @@ import {
 import "./dashboard.css";
 import { LocationManager, RequirementManager } from "./pages/StaffingPages";
 import { ScheduleGenerator, StudentSchedule } from "./pages/SchedulePages";
+import { TimeOffPage } from "./pages/TimeOffPages";
+import AttendancePage from "./pages/AttendancePages";
 
 function Protected({ role }) {
   const { user } = useAuth();
@@ -63,6 +65,12 @@ export default function Router() {
               <Route path="profile" element={<StudentProfile />} />
               <Route path="schedule" element={<StudentSchedule />} />
               <Route
+                path="draft-schedule"
+                element={<StudentSchedule key="draft" draft />}
+              />
+              <Route path="time-off" element={<TimeOffPage />} />
+              <Route path="attendance" element={<AttendancePage />} />
+              <Route
                 path="classes"
                 element={<WindowManager key="classes" kind="classes" />}
               />
@@ -82,6 +90,11 @@ export default function Router() {
               <Route path="locations" element={<LocationManager />} />
               <Route path="requirements" element={<RequirementManager />} />
               <Route path="schedules" element={<ScheduleGenerator />} />
+              <Route path="time-off" element={<TimeOffPage supervisor />} />
+              <Route
+                path="attendance"
+                element={<AttendancePage supervisor />}
+              />
             </Route>
           </Route>
           <Route

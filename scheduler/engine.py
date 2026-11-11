@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
 
-ALGORITHM_VERSION = "greedy-30m-v1"
+ALGORITHM_VERSION = "greedy-30m-v2-leave"
 SLOT_MINUTES = 30
 
 
@@ -12,6 +12,12 @@ class Window:
     day: int
     start: int
     end: int
+
+
+@dataclass(frozen=True)
+class DateRange:
+    start: date
+    end: date
 
 
 @dataclass(frozen=True)
@@ -24,6 +30,7 @@ class Student:
     classes: tuple[Window, ...] = ()
     active: bool = True
     prior_minutes: int = 0
+    approved_time_off: tuple[DateRange, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -83,6 +90,67 @@ def _merge(rows, key):
     return tuple(merged)
 
 
+def assignment_error(student, requirement, shift_date, start, end, assignments, assigned_minutes):
+    """Shared hard constraints for generation, manual editing and publication."""
+    if student.department_id != requirement.department_id or not student.active:
+        return "Student must be active and belong to this department"
+    if requirement.location_id not in student.eligible_locations:
+        return "Student is not eligible for this active work location"
+    if shift_date.weekday() != requirement.day or not requirement.start <= start < end <= requirement.end:
+        return "Shift must fit the staffing requirement on the correct day"
+    if start % SLOT_MINUTES or end % SLOT_MINUTES:
+        return "Shift must use 30-minute boundaries"
+    if any(leave.start <= shift_date <= leave.end for leave in student.approved_time_off):
+        return "Approved time off covers this date"
+    if not any(w.day == requirement.day and w.start <= start and end <= w.end for w in student.availability):
+        # Adjacent submitted windows form one continuous available interval.
+        windows = sorted((w for w in student.availability if w.day == requirement.day), key=lambda w: w.start)
+        cursor = start
+        for window in windows:
+            if window.start <= cursor < window.end:
+                cursor = window.end
+        if cursor < end:
+            return "Submitted availability does not cover this shift"
+    if any(w.day == requirement.day and w.start < end and start < w.end for w in student.classes):
+        return "Shift conflicts with a class"
+    if any(a.student_id == student.id and a.shift_date == shift_date and a.start < end and start < a.end for a in assignments):
+        return "Student already has an overlapping shift"
+    if assigned_minutes + end - start > student.max_minutes:
+        return "Shift would exceed the student's maximum weekly hours"
+    return None
+
+
+def summarize(week_start, students, requirements, assignments, reasons=None):
+    """Measure fixed assignments against saved demand; never allocate employees."""
+    reasons = reasons or {}
+    gaps = []
+    required_minutes = 0
+    for requirement in sorted(requirements, key=lambda r: r.id):
+        shift_date = week_start + timedelta(days=requirement.day)
+        for start in range(requirement.start, requirement.end, SLOT_MINUTES):
+            count = sum(a.requirement_id == requirement.id and a.shift_date == shift_date
+                        and a.start <= start < a.end for a in assignments)
+            if count > requirement.count:
+                raise ValueError("Staffing capacity exceeded for this position")
+            required_minutes += SLOT_MINUTES * requirement.count
+            if count < requirement.count:
+                gaps.append(Unfilled(requirement.id, requirement.location_id, shift_date, start,
+                    start + SLOT_MINUTES, requirement.count - count,
+                    reasons.get((requirement.id, shift_date, start), "Unfilled staffing position; assign an eligible employee or acknowledge it at publication")))
+    totals = {s.id: 0 for s in students}
+    for assignment in assignments:
+        totals[assignment.student_id] = totals.get(assignment.student_id, 0) + assignment.end - assignment.start
+    filled = sum(totals.values())
+    return Result(tuple(assignments), _merge(gaps, lambda u: (u.shift_date, u.location_id, u.requirement_id, u.missing_count, u.reason)), {
+        "required_staff_minutes": required_minutes, "assigned_staff_minutes": filled,
+        "unfilled_staff_minutes": required_minutes - filled,
+        "coverage_percent": round(100 * filled / required_minutes, 2) if required_minutes else 100.0,
+        "total_assigned_hours": filled / 60, "required_slot_positions": required_minutes // SLOT_MINUTES,
+        "unfilled_slot_positions": (required_minutes - filled) // SLOT_MINUTES,
+        "employee_minutes": {str(key): value for key, value in sorted(totals.items())}, "slot_minutes": SLOT_MINUTES,
+    })
+
+
 def generate(department_id: int, week_start: date, students: tuple[Student, ...],
              requirements: tuple[Requirement, ...]) -> Result:
     """Create a new independent weekly draft; never mutate the supplied inputs.
@@ -99,6 +167,9 @@ def generate(department_id: int, week_start: date, students: tuple[Student, ...]
             raise ValueError("Weekly and prior minutes must be nonnegative integers")
         for window in (*student.classes, *student.availability):
             _valid_window(window.day, window.start, window.end)
+        for leave in student.approved_time_off:
+            if type(leave.start) is not date or type(leave.end) is not date or leave.start > leave.end:
+                raise ValueError("Invalid approved time-off date range")
     for requirement in requirements:
         _valid_window(requirement.day, requirement.start, requirement.end)
         if requirement.start % SLOT_MINUTES or requirement.end % SLOT_MINUTES:
@@ -121,18 +192,8 @@ def generate(department_id: int, week_start: date, students: tuple[Student, ...]
     required_minutes = 0
 
     def exclusion(student, requirement, start, end):
-        if requirement.location_id not in student.eligible_locations:
-            return "No location-eligible employees"
-        if not any(w.day == requirement.day and w.start <= start and end <= w.end for w in student.availability):
-            return "Submitted availability does not cover this slot"
-        if any(w.day == requirement.day and w.start < end and start < w.end for w in student.classes):
-            return "Class conflicts"
         shift_date = week_start + timedelta(days=requirement.day)
-        if any(a.student_id == student.id and a.shift_date == shift_date and a.start < end and start < a.end for a in assigned):
-            return "Employees assigned at another location"
-        if totals[student.id] + end - start > student.max_minutes:
-            return "Weekly hour limits reached"
-        return None
+        return assignment_error(student, requirement, shift_date, start, end, assigned, totals[student.id])
 
     for day in range(7):
         day_requirements = [r for r in relevant if r.day == day]
@@ -171,14 +232,5 @@ def generate(department_id: int, week_start: date, students: tuple[Student, ...]
                                              start, end, missing, reason))
     assignments = _merge(assigned, lambda a: (a.shift_date, a.location_id, a.requirement_id, a.student_id))
     gaps = _merge(unfilled, lambda u: (u.shift_date, u.location_id, u.requirement_id, u.missing_count, u.reason))
-    filled_minutes = sum(totals.values())
-    return Result(assignments, gaps, {
-        "required_staff_minutes": required_minutes, "assigned_staff_minutes": filled_minutes,
-        "unfilled_staff_minutes": required_minutes - filled_minutes,
-        "coverage_percent": round(100 * filled_minutes / required_minutes, 2) if required_minutes else 100.0,
-        "total_assigned_hours": filled_minutes / 60,
-        "required_slot_positions": required_minutes // SLOT_MINUTES,
-        "unfilled_slot_positions": (required_minutes - filled_minutes) // SLOT_MINUTES,
-        "employee_minutes": {str(student_id): minutes for student_id, minutes in sorted(totals.items())},
-        "slot_minutes": SLOT_MINUTES,
-    })
+    reasons = {(gap.requirement_id, gap.shift_date, minute): gap.reason for gap in gaps for minute in range(gap.start, gap.end, SLOT_MINUTES)}
+    return summarize(week_start, candidates, relevant, assignments, reasons)

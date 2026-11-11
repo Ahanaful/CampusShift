@@ -2,7 +2,7 @@ from dataclasses import replace
 from datetime import date
 import unittest
 
-from scheduler.engine import Requirement, Student, Window, generate
+from scheduler.engine import DateRange, Requirement, Student, Window, generate
 
 MONDAY = date(2026, 10, 19)
 
@@ -30,6 +30,18 @@ class SchedulerTests(unittest.TestCase):
                 result = self.run_schedule([self.student(**changes)])
                 self.assertEqual(result.assignments, ())
                 self.assertTrue(result.unfilled)
+
+    def test_approved_leave_includes_both_boundary_dates(self):
+        for start, end in [(date(2026, 10, 18), MONDAY), (MONDAY, date(2026, 10, 20)), (MONDAY, MONDAY)]:
+            result = self.run_schedule([self.student(approved_time_off=(DateRange(start, end),))])
+            self.assertFalse(result.assignments)
+            self.assertIn("Approved time off", result.unfilled[0].reason)
+        result = self.run_schedule([self.student(approved_time_off=(DateRange(date(2026, 10, 20), date(2026, 10, 21)),))])
+        self.assertTrue(result.assignments)
+
+    def test_invalid_approved_leave_range_rejected(self):
+        with self.assertRaises(ValueError):
+            self.run_schedule([self.student(approved_time_off=(DateRange(date(2026, 10, 20), MONDAY),))])
 
     def test_class_overlap_and_half_open_boundary(self):
         result = self.run_schedule([self.student(classes=(Window(0, 540, 600),))])

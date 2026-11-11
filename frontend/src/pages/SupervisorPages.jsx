@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ScheduleConflictNotice } from "./TimeOffPages";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { api } from "../services/api";
@@ -55,6 +56,7 @@ export function SupervisorDashboard() {
           </div>
         </div>
       </ResourceState>
+      <ScheduleConflictNotice />
       <section className="panel">
         <h2>Weekly scheduling</h2>
         <div className="empty-state">

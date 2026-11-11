@@ -62,18 +62,22 @@ class RunOut(BaseModel):
     id: int
     department_id: int
     week_start: date
-    status: Literal["draft"]
+    status: Literal["draft", "published", "archived"]
     created_by: int
     created_at: datetime
     algorithm_version: str
     summary: dict
+    version: int
+    published_by: int | None
+    published_at: datetime | None
+    uncovered_acknowledged: bool
 
-    @field_validator("created_at")
+    @field_validator("created_at", "published_at")
     @classmethod
     def utc_creation_time(cls, value):
         # SQLite drops tzinfo on round-trip. Creation instants are always UTC;
         # staffing dates/times remain department-local and are never converted.
-        return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
+        return value.replace(tzinfo=timezone.utc) if value is not None and value.tzinfo is None else value
 
 
 class ShiftOut(BaseModel):
@@ -88,7 +92,7 @@ class ShiftOut(BaseModel):
     start_time: time
     end_time: time
     duration_minutes: int
-    status: Literal["draft"]
+    status: Literal["draft", "published", "archived"]
 
 
 class UnfilledOut(BaseModel):
@@ -112,7 +116,7 @@ class RunDetail(RunOut):
 class StudentPreview(BaseModel):
     run_id: int | None
     week_start: date | None
-    status: Literal["draft"]
+    status: Literal["draft", "published"]
     timezone: str
     assigned_hours: float
     shifts: list[ShiftOut]
