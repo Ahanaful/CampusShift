@@ -1,4 +1,4 @@
-﻿# CampusShift
+# CampusShift
 
 CampusShift helps university departments coordinate student employees, class commitments, and work availability. Phase 5 adds published-shift clock-in/out, actual attendance hours, supervisor monitoring, audited correction approvals, and CSV export. Scheduling, time off, editing, publishing, authentication, profiles and the landing page remain available.
 
@@ -9,7 +9,7 @@ CampusShift helps university departments coordinate student employees, class com
 - Argon2id password hashes and signed, short-lived JWT bearer tokens.
 - Node.js 22.13+ and npm (22.22.0 used for verification); Git; Windows PowerShell examples below.
 
-No AWS credentials or services are required. Run commands from the repository root unless a different directory is shown.
+No AWS credentials or services are required for local development. Run commands from the repository root unless a different directory is shown.
 
 ## Backend setup and database initialization
 
@@ -86,7 +86,7 @@ For the landing-page connection indicator, stop the backend and click **Check ag
 | `API_PROXY_TARGET` | frontend environment | Vite development proxy target; default `http://127.0.0.1:8000`. |
 | `VITE_API_BASE_URL` | frontend environment | Optional browser API origin. Empty means same-origin `/api` requests. All `VITE_` values are public. |
 
-Restart processes after changing environment variables. Never put secrets in frontend variables. Vite's proxy applies to development only. For separate hosting, build with the API origin in `VITE_API_BASE_URL` and allow the exact frontend origin in backend CORS. A built SPA host must serve `index.html` for client routes. No hosting is configured here.
+Restart processes after changing environment variables. Never put secrets in frontend variables. Vite's proxy applies to development only. For separate hosting, build with the API origin in `VITE_API_BASE_URL` and allow the exact frontend origin in backend CORS. A built SPA host must serve `index.html` for client routes. The manually configured AWS deployment is documented below; hosting configuration files are not yet tracked in this repository.
 
 ## Build, migrations, and tests
 
@@ -149,11 +149,11 @@ docs/                 Architecture and verification notes
 
 ## Local-development boundaries and AWS constraints
 
-This phase uses bearer access tokens in memory; sign-out clears the client token, and any previously copied token remains valid until expiration. There is no token revocation, refresh flow, password reset, email verification, or deployment hardening such as login rate limiting. This is a local development implementation. All authorization is enforced in the backend even if frontend route protection is bypassed.
+This phase uses bearer access tokens in memory; sign-out clears the client token, and any previously copied token remains valid until expiration. There is no token revocation, refresh flow, password reset, email verification, or deployment hardening such as login rate limiting. The application has a manual AWS demo deployment; production hardening remains pending. All authorization is enforced in the backend even if frontend route protection is bypassed.
 
-AWS Academy Cloud Architecting 3 Sandbox supports the listed Lambda, DynamoDB, S3, CloudFront, EC2, CloudFormation, CloudWatch, and RDS services, subject to sandbox permissions. API Gateway and Cognito are unavailable; IAM is read-only. Resources and data may disappear between sessions, so future infrastructure must be reproducible from code. This phase uses no AWS services and creates no cloud resources. DynamoDB, shift swaps, email notifications, payroll, and advanced analytics remain out of scope.
+AWS Academy Cloud Architecting 3 Sandbox supports the listed Lambda, DynamoDB, S3, CloudFront, EC2, CloudFormation, CloudWatch, and RDS services, subject to sandbox permissions. API Gateway and Cognito are unavailable; IAM is read-only. Resources and data may disappear between sessions, so future infrastructure must be reproducible from code. Local setup creates no cloud resources. A manual EC2 deployment is now running as documented below. DynamoDB, shift swaps, email notifications, payroll, and advanced analytics remain out of scope.
 
-Next: deployment preparation, stronger authentication/session controls, notification delivery and report pagination, using a permitted reproducible sandbox architecture.
+Next: HTTPS, deployed application verification, reproducible deployment configuration, stronger authentication/session controls, notification delivery and report pagination.
 
 ## Phase 3 weekly scheduling demo
 
@@ -318,4 +318,57 @@ Demonstrate attendance:
 
 Attendance remains linked to its original assigned shift when another schedule version is published; history is not moved or deleted. All new persisted timestamps use canonical ISO UTC strings with an explicit `Z` and deserialize as aware UTC datetimes. The frontend displays department-local times with timezone abbreviations (for example CST/CDT). DST gaps are rejected; ambiguous scheduled times use the first occurrence, while correction forms support an explicit second occurrence. Actual hours use UTC elapsed duration, so a DST-transition shift can differ from planned wall-clock duration.
 
-See [attendance design and API endpoints](docs/attendance.md). Run the complete verification commands in the previous section; attendance tests are included in backend discovery. No AWS, DynamoDB, GPS, biometrics, payroll/wage calculations, or email/SMS delivery is implemented.
+See [attendance design and API endpoints](docs/attendance.md). Run the complete verification commands in the previous section; attendance tests are included in backend discovery. Phase 5 adds no AWS service integrations, DynamoDB, GPS, biometrics, payroll/wage calculations, or email/SMS delivery. The application is hosted manually on EC2 as described below.
+
+
+## AWS EC2 deployment update
+
+CampusShift has been deployed manually from GitHub to an AWS EC2 instance using SSH from a Mac terminal. The following details describe the confirmed server setup; HTTPS and full deployed application testing remain pending.
+
+| Item | Deployment details |
+| --- | --- |
+| Public URL | <http://3.133.115.154> |
+| AWS Region | `us-east-2` (Ohio) |
+| Instance type | `t3.micro` |
+| Operating system | Ubuntu 26.04.1 LTS (64-bit x86_64), as reported for the deployed server |
+| Project directory | `/home/ubuntu/CampusShift` |
+| Backend directory | `/home/ubuntu/CampusShift/backend` |
+| Frontend source directory | `/home/ubuntu/CampusShift/frontend` |
+| Frontend deployment directory | `/var/www/campusshift` |
+| Backend service | `campusshift.service` |
+| systemd configuration | `/etc/systemd/system/campusshift.service` |
+| Nginx configuration | `/etc/nginx/sites-available/campusshift` |
+| Database | SQLite, initialized using Alembic migrations |
+| HTTPS | Not configured |
+
+Nginx serves the built React frontend and proxies `/api/` requests to FastAPI on `127.0.0.1:8000`. FastAPI runs through systemd, and its service is configured to start automatically when EC2 boots. SQLite stores application data on the instance; DynamoDB is not used.
+
+Deployment is manual. There is no GitHub Actions deployment workflow, and the server's Nginx and systemd configuration files are not yet included in this repository. The public IP may change after stopping and starting the EC2 instance.
+
+### Server status checks
+
+Run these commands in the SSH session on EC2:
+
+```bash
+sudo systemctl status campusshift.service
+sudo systemctl status nginx
+sudo journalctl -u campusshift.service -n 100 --no-pager
+curl http://127.0.0.1:8000/api/health
+```
+
+The API health endpoint checks liveness only; it does not verify database readiness or the full application workflow.
+
+### Initial data and remaining verification
+
+Database migrations have been run. Creation of the demo department and supervisor account is **not confirmed**, and the demo-data seeding script has not been run or verified as part of this deployment update. Migrations alone do not create these records. See the backend setup section for the explicit demo seed commands; public registration creates student accounts only.
+
+Before treating the deployment as production-ready:
+
+- Configure HTTPS before using real account credentials.
+- Confirm the initial department and supervisor provisioning, then verify registration and login.
+- Test student profiles, classes, availability, staffing locations and requirements, schedule generation/editing/publication, time off, attendance corrections, and CSV export through the public website.
+- Verify frontend page refreshes and direct links, API proxying, and service recovery after an EC2 reboot.
+- Configure and verify SQLite backups and restoration.
+- Add reproducible deployment configuration and document the manual update procedure.
+
+Do not commit server secrets, SSH private keys, or the SQLite database to Git.
