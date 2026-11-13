@@ -1,3 +1,9 @@
+> **Historical architecture proposal.** The current deployment is the existing
+> Ubuntu EC2/SQLite server. Follow [the current runbook](aws-deployment.md) and
+> [verification report](aws-ec2-verification.md). Account, region, cost and policy
+> claims below are dated planning evidence, not current verification or deployment
+> authorization. Do not provision a replacement as part of verification.
+
 # Phase 6 proposed architecture ? AWS Free Plan
 
 > **Current decision:** remain on the project Free Plan in us-east-2. Ohio reads/template validation succeeded; previous us-east-1 policy-blocker/Console-IAM prerequisites are superseded. The diagram below is the earlier EC2 proposal. Read [the corrected analysis](aws-project-free-plan-decision.md) for the low-idle-cost alternative and upgrade requirements.

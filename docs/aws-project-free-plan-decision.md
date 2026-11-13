@@ -1,3 +1,9 @@
+> **Existing deployment takes precedence:** CampusShift is already served from
+> the Ohio EC2 endpoint. See [the current runbook](aws-deployment.md) and
+> [verification report](aws-ec2-verification.md). This document preserves an
+> alternative architecture and historical account observations, not authorization
+> to provision or migrate. Current account identity is unverified on this workstation.
+
 # Decision: remain on the project-based Free Plan
 
 > Stage B implementation now prepares the Lambda/Aurora architecture described here. The helper defaults to Ohio and supports the managed project identity. Use the [current serverless runbook](aws-serverless-deployment.md) for implemented templates, current costs, commands and outstanding cloud tests. This memo preserves the earlier research findings and decisions; no cloud provisioning has occurred.

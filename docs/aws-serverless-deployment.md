@@ -1,3 +1,9 @@
+> **Existing deployment takes precedence:** CampusShift is already served from
+> the Ohio EC2 endpoint. See [the current runbook](aws-deployment.md) and
+> [verification report](aws-ec2-verification.md). This document preserves an
+> alternative architecture and historical account observations, not authorization
+> to provision or migrate. Current account identity is unverified on this workstation.
+
 # Stage B: serverless deployment preparation
 
 Prepared November 13, 2026. **Not deployed.** This is the current runbook for the
