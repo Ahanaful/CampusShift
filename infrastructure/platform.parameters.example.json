@@ -1,0 +1,13 @@
+[
+  {"ParameterKey": "EnvironmentName", "ParameterValue": "campusshift-demo"},
+  {"ParameterKey": "VpcId", "ParameterValue": "REPLACE_EXISTING_VPC"},
+  {"ParameterKey": "PublicSubnetId", "ParameterValue": "REPLACE_PUBLIC_SUBNET"},
+  {"ParameterKey": "DatabaseSubnetIds", "ParameterValue": "REPLACE_PRIVATE_SUBNET_A,REPLACE_PRIVATE_SUBNET_B"},
+  {"ParameterKey": "AdminCidr", "ParameterValue": "REPLACE_YOUR_IPV4/32"},
+  {"ParameterKey": "KeyName", "ParameterValue": "REPLACE_EXISTING_KEYPAIR"},
+  {"ParameterKey": "CloudFrontPrefixListId", "ParameterValue": "REPLACE_REGIONAL_PREFIX_LIST"},
+  {"ParameterKey": "InstanceProfileName", "ParameterValue": ""},
+  {"ParameterKey": "DatabaseEngineVersion", "ParameterValue": "REPLACE_SUPPORTED_16_MINOR_FROM_PREFLIGHT"},
+  {"ParameterKey": "DatabasePasswordParameter", "ParameterValue": "/campusshift/demo/database-password"},
+  {"ParameterKey": "DatabasePasswordVersion", "ParameterValue": "1"}
+]

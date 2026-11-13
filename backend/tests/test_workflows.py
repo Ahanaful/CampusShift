@@ -16,6 +16,7 @@ from app.models import (ClassSchedule, LocationEligibility, ScheduleEvent, Sched
                         TimeOffRequest, User)
 import test_phase2 as phase2
 import test_scheduling as phase3
+from database_support import concurrency_app
 
 
 class WorkflowTests(unittest.TestCase):
@@ -269,13 +270,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_simultaneous_edits_accept_only_one_revision(self):
         run = self.generate(); shift = run["shifts"][0]
-        with TemporaryDirectory(dir=BACKEND_DIR) as directory:
-            path = Path(directory) / "concurrent.db"
-            source = self.app.state.engine.raw_connection()
-            destination = sqlite3.connect(path)
-            source.driver_connection.backup(destination)
-            destination.close(); source.close()
-            app = create_app(Settings("sqlite:///" + str(path), self.settings.jwt_secret, 30, ()))
+        with concurrency_app(self.app, self.settings) as app:
             with TestClient(app) as client:
                 def remove():
                     return client.post(f"/api/supervisor/schedules/{run['id']}/shifts/{shift['id']}/remove",

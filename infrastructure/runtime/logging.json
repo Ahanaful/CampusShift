@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {"json": {"()": "app.core.logging_config.JSONFormatter"}},
+  "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json", "stream": "ext://sys.stdout"}},
+  "root": {"level": "INFO", "handlers": ["console"]},
+  "loggers": {
+    "uvicorn": {"level": "INFO", "propagate": true},
+    "uvicorn.error": {"level": "INFO", "propagate": true},
+    "uvicorn.access": {"level": "WARNING", "propagate": false},
+    "sqlalchemy.engine": {"level": "WARNING", "propagate": true}
+  }
+}

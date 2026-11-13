@@ -1,3 +1,11 @@
 # Infrastructure
 
-Reserved for reproducible AWS infrastructure definitions in a future phase. No resources are created in Phase 1. Confirm sandbox service and role permissions before choosing a deployment design; API Gateway and Cognito are unavailable, and IAM is read-only. Resources and data may disappear between sessions.
+> Current Stage B: `serverless-artifacts.json`, `serverless.json` and `frontend.json` prepare the Ohio Lambda/Aurora target; all passed local lint and AWS ValidateTemplate. Read the [current runbook and cost review](../docs/aws-serverless-deployment.md). No resources are deployed. `platform.json` and the EC2 notes below remain a fallback; earlier us-east-1/Console-IAM prerequisites are superseded.
+
+Phase 6 preparation: `platform.json` defines an Amazon Linux EC2 backend, restrictive security groups, optional private single-AZ RDS PostgreSQL and optional seven-day CloudWatch log group. `frontend.json` defines a private versioned S3 bucket, CloudFront OAC, SPA route rewriting and HTTPS-only `/api` forwarding. No IAM resources are created.
+
+Start with [Stage A and cost/permission review](../docs/aws-stage-a.md), [secure IAM/profile setup](../docs/aws-profile-setup.md), then [feasibility and architecture](../docs/aws-architecture.md), then [deployment instructions](../docs/aws-deployment.md). Templates have been prepared for review; their existence does not mean AWS permissions or deployment were verified. Existing VPC/subnets, key pair, approved SSM SecureString, a real API DNS name and trusted origin certificate are prerequisites. Parameter examples contain placeholders only. Do not execute until costs and the exact change set are approved.
+
+`runtime/` contains systemd, Nginx TLS, structured logging, log rotation and optional CloudWatch agent configuration. Region is selected by AWS CLI, not hardcoded into resources. Preserve the documented legacy manual deployment until a replacement is verified.
+
+The current profile/region are campusshift/us-east-2. Stage B prepares code only. The existing managed project human role is expected; do not follow the historical Console-user instructions or apply `iam/preflight-policy.json` to managed roles. `serverless.json` creates two scoped Lambda execution roles with `CAPABILITY_IAM` after approval; no instance profile or CDK bootstrap is needed. Aurora PostgreSQL 16.15 and zero-ACU support were confirmed read-only in Ohio. Review `cost-plan.us-east-2.json`; `cost-plan.us-east-1.json` is historical. Creation rights, capacity and deployed performance remain untested.

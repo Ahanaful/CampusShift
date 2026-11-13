@@ -1,0 +1,30 @@
+[Unit]
+Description=CampusShift FastAPI
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=campusshift
+Group=campusshift
+WorkingDirectory=/opt/campusshift/current/backend
+EnvironmentFile=/etc/campusshift/application.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/campusshift/current/.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000 --workers 2 --no-access-log --no-proxy-headers --log-config /opt/campusshift/current/infrastructure/runtime/logging.json
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictSUIDSGID=true
+ReadWritePaths=/var/log/campusshift
+StandardOutput=append:/var/log/campusshift/application.log
+StandardError=append:/var/log/campusshift/application.log
+
+[Install]
+WantedBy=multi-user.target

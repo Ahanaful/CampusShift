@@ -1,0 +1,27 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "OPTIONAL CampusShift EC2 CloudWatch log-only role/profile proposal. Not required for base deployment. CAPABILITY_IAM and separate approval required.",
+  "Parameters": {
+    "LogGroupName": {"Type": "String", "Default": "/campusshift/campusshift-demo", "AllowedPattern": "/campusshift/[a-zA-Z0-9/_-]+"}
+  },
+  "Resources": {
+    "RuntimeRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}]},
+        "Policies": [{"PolicyName": "CampusShiftApplicationLogsOnly", "PolicyDocument": {
+          "Version": "2012-10-17", "Statement": [
+            {"Effect": "Allow", "Action": ["logs:CreateLogStream", "logs:PutLogEvents"], "Resource": {"Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*"}},
+            {"Effect": "Allow", "Action": "logs:DescribeLogStreams", "Resource": {"Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:*"}}
+          ]
+        }}],
+        "Tags": [{"Key": "Project", "Value": "CampusShift"}]
+      }
+    },
+    "RuntimeProfile": {"Type": "AWS::IAM::InstanceProfile", "Properties": {"Roles": [{"Ref": "RuntimeRole"}]}}
+  },
+  "Outputs": {
+    "InstanceProfileName": {"Value": {"Ref": "RuntimeProfile"}},
+    "RuntimeRoleArn": {"Value": {"Fn::GetAtt": ["RuntimeRole", "Arn"]}}
+  }
+}

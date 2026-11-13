@@ -15,6 +15,7 @@ from app.models import (AssignedShift, AttendanceCorrection, AttendanceEvent, At
                         ScheduleRun, StaffingRequirement, WorkLocation)
 from main import create_app
 import test_phase2 as phase2
+from database_support import concurrency_app
 
 DAY = date(2026, 11, 16)
 START = datetime(2026, 11, 16, 15, tzinfo=UTC)  # 09:00 CST
@@ -244,11 +245,7 @@ class AttendanceTests(unittest.TestCase):
 
     def test_unique_active_constraint_and_concurrent_clock_ins(self):
         second_shift, _ = self.make_shift(run_id=self.run_id)
-        with TemporaryDirectory(dir=BACKEND_DIR) as directory:
-            path = Path(directory) / "clock.db"
-            source = self.app.state.engine.raw_connection(); dest = sqlite3.connect(path)
-            source.driver_connection.backup(dest); source.close(); dest.close()
-            app = create_app(Settings("sqlite:///" + str(path), self.settings.jwt_secret, 30, ()))
+        with concurrency_app(self.app, self.settings) as app:
             with TestClient(app) as client, patch("app.services.attendance.now_utc", return_value=START):
                 def clock(shift_id):
                     return client.post("/api/students/me/attendance/clock-in", headers=self.headers(), json={"assigned_shift_id": shift_id}).status_code

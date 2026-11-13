@@ -184,3 +184,9 @@ override.tf.json
 *.sqlite
 *.sqlite3
 *.sqlite3-*
+
+# Deployment operator inputs, private backup data and discovery outputs
+*.parameters.local.json
+*.dump
+*.backup
+aws-discovery.local.json

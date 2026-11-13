@@ -1,0 +1,439 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "CampusShift Free Plan proposal: existing VPC, Amazon Linux 2023, private single-AZ PostgreSQL; no IAM resources. Stage B approval required.",
+	"Parameters": {
+		"EnvironmentName": {
+			"Type": "String",
+			"Default": "campusshift-demo",
+			"AllowedPattern": "[a-z][a-z0-9-]{2,30}"
+		},
+		"VpcId": {
+			"Type": "AWS::EC2::VPC::Id"
+		},
+		"PublicSubnetId": {
+			"Type": "AWS::EC2::Subnet::Id"
+		},
+		"DatabaseSubnetIds": {
+			"Type": "CommaDelimitedList",
+			"Default": "",
+			"Description": "Two existing private subnet IDs in different AZs when CreateDatabase=true; blank for EC2-only fallback."
+		},
+		"AdminCidr": {
+			"Type": "String",
+			"AllowedPattern": "([0-9]{1,3}\\.){3}[0-9]{1,3}/32",
+			"Description": "Administrator public IPv4 /32; never 0.0.0.0/0"
+		},
+		"KeyName": {
+			"Type": "AWS::EC2::KeyPair::KeyName"
+		},
+		"InstanceType": {
+			"Type": "String",
+			"Default": "t3.micro",
+			"AllowedValues": [
+				"t3.micro"
+			],
+			"Description": "Reviewed cost-plan size; any larger type requires a new review"
+		},
+		"AmiId": {
+			"Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+			"Default": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+		},
+		"InstanceProfileName": {
+			"Type": "String",
+			"Default": "",
+			"Description": "Optional scoped EC2 runtime profile; blank is sufficient for SSH/passfile deployment. IAM creation is a separate approval."
+		},
+		"CloudFrontPrefixListId": {
+			"Type": "String",
+			"AllowedPattern": "pl-[a-z0-9]+",
+			"Description": "Regional com.amazonaws.global.cloudfront.origin-facing managed prefix list"
+		},
+		"CreateDatabase": {
+			"Type": "String",
+			"Default": "true",
+			"AllowedValues": [
+				"true",
+				"false"
+			]
+		},
+		"DatabaseClass": {
+			"Type": "String",
+			"Default": "db.t3.micro",
+			"AllowedValues": [
+				"db.t3.micro"
+			]
+		},
+		"DatabaseEngineVersion": {
+			"Type": "String",
+			"AllowedPattern": "16\\.[0-9]+",
+			"Description": "Explicit permitted PostgreSQL 16 minor from regional preflight; no unreviewed service-default major version"
+		},
+		"DatabaseName": {
+			"Type": "String",
+			"Default": "campusshift",
+			"AllowedPattern": "[a-z][a-z0-9]{0,30}"
+		},
+		"DatabaseUser": {
+			"Type": "String",
+			"Default": "campusshiftadmin",
+			"AllowedPattern": "[a-z][a-z0-9]{0,30}"
+		},
+		"DatabasePasswordParameter": {
+			"Type": "String",
+			"Default": "/campusshift/demo/database-password",
+			"AllowedPattern": "/[a-zA-Z0-9/_.-]+",
+			"Description": "Existing approved SSM SecureString; no password values in stack parameters"
+		},
+		"DatabasePasswordVersion": {
+			"Type": "Number",
+			"Default": 1,
+			"MinValue": 1
+		},
+		"EnableCloudWatchLogGroup": {
+			"Type": "String",
+			"Default": "false",
+			"AllowedValues": [
+				"true",
+				"false"
+			]
+		}
+	},
+	"Conditions": {
+		"WithDatabase": {
+			"Fn::Equals": [
+				{
+					"Ref": "CreateDatabase"
+				},
+				"true"
+			]
+		},
+		"WithProfile": {
+			"Fn::Not": [
+				{
+					"Fn::Equals": [
+						{
+							"Ref": "InstanceProfileName"
+						},
+						""
+					]
+				}
+			]
+		},
+		"WithLogs": {
+			"Fn::Equals": [
+				{
+					"Ref": "EnableCloudWatchLogGroup"
+				},
+				"true"
+			]
+		}
+	},
+	"Resources": {
+		"BackendSecurityGroup": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupDescription": "SSH from administrator; HTTPS from CloudFront origin-facing addresses only",
+				"VpcId": {
+					"Ref": "VpcId"
+				},
+				"SecurityGroupIngress": [
+					{
+						"IpProtocol": "tcp",
+						"FromPort": 22,
+						"ToPort": 22,
+						"CidrIp": {
+							"Ref": "AdminCidr"
+						}
+					},
+					{
+						"IpProtocol": "tcp",
+						"FromPort": 443,
+						"ToPort": 443,
+						"SourcePrefixListId": {
+							"Ref": "CloudFrontPrefixListId"
+						}
+					}
+				],
+				"SecurityGroupEgress": [
+					{
+						"IpProtocol": "tcp",
+						"FromPort": 443,
+						"ToPort": 443,
+						"CidrIp": "0.0.0.0/0"
+					},
+					{
+						"IpProtocol": "tcp",
+						"FromPort": 80,
+						"ToPort": 80,
+						"CidrIp": "0.0.0.0/0"
+					}
+				]
+			}
+		},
+		"DatabaseSecurityGroup": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Condition": "WithDatabase",
+			"Properties": {
+				"GroupDescription": "PostgreSQL from backend only",
+				"VpcId": {
+					"Ref": "VpcId"
+				},
+				"SecurityGroupIngress": [
+					{
+						"IpProtocol": "tcp",
+						"FromPort": 5432,
+						"ToPort": 5432,
+						"SourceSecurityGroupId": {
+							"Ref": "BackendSecurityGroup"
+						}
+					}
+				],
+				"SecurityGroupEgress": [
+					{
+						"IpProtocol": "tcp",
+						"FromPort": 443,
+						"ToPort": 443,
+						"CidrIp": "127.0.0.1/32"
+					}
+				]
+			}
+		},
+		"BackendDatabaseEgress": {
+			"Type": "AWS::EC2::SecurityGroupEgress",
+			"Condition": "WithDatabase",
+			"Properties": {
+				"GroupId": {
+					"Ref": "BackendSecurityGroup"
+				},
+				"IpProtocol": "tcp",
+				"FromPort": 5432,
+				"ToPort": 5432,
+				"DestinationSecurityGroupId": {
+					"Ref": "DatabaseSecurityGroup"
+				}
+			}
+		},
+		"Backend": {
+			"Type": "AWS::EC2::Instance",
+			"Properties": {
+				"ImageId": {
+					"Ref": "AmiId"
+				},
+				"InstanceType": {
+					"Ref": "InstanceType"
+				},
+				"KeyName": {
+					"Ref": "KeyName"
+				},
+				"CreditSpecification": {
+					"CPUCredits": "standard"
+				},
+				"IamInstanceProfile": {
+					"Fn::If": [
+						"WithProfile",
+						{
+							"Ref": "InstanceProfileName"
+						},
+						{
+							"Ref": "AWS::NoValue"
+						}
+					]
+				},
+				"MetadataOptions": {
+					"HttpTokens": "required",
+					"HttpEndpoint": "enabled",
+					"HttpPutResponseHopLimit": 1
+				},
+				"NetworkInterfaces": [
+					{
+						"AssociatePublicIpAddress": true,
+						"DeviceIndex": "0",
+						"SubnetId": {
+							"Ref": "PublicSubnetId"
+						},
+						"GroupSet": [
+							{
+								"Ref": "BackendSecurityGroup"
+							}
+						]
+					}
+				],
+				"BlockDeviceMappings": [
+					{
+						"DeviceName": "/dev/xvda",
+						"Ebs": {
+							"VolumeSize": 12,
+							"VolumeType": "gp3",
+							"Encrypted": true,
+							"DeleteOnTermination": true
+						}
+					}
+				],
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": {
+							"Ref": "EnvironmentName"
+						}
+					},
+					{
+						"Key": "Project",
+						"Value": "CampusShift"
+					},
+					{
+						"Key": "Environment",
+						"Value": {
+							"Ref": "EnvironmentName"
+						}
+					}
+				],
+				"UserData": {
+					"Fn::Base64": "#!/bin/bash\nset -euo pipefail\ndnf install -y python3.11 python3.11-pip nginx tar\nid campusshift >/dev/null 2>&1 || useradd --system --home-dir /opt/campusshift --shell /sbin/nologin campusshift\ninstall -d -m 0755 /opt/campusshift /etc/campusshift\n# No secrets, migrations or automatic application startup in user-data.\n"
+				}
+			}
+		},
+		"DatabaseSubnets": {
+			"Type": "AWS::RDS::DBSubnetGroup",
+			"Condition": "WithDatabase",
+			"Properties": {
+				"DBSubnetGroupDescription": "Existing private database subnets",
+				"SubnetIds": {
+					"Ref": "DatabaseSubnetIds"
+				}
+			}
+		},
+		"Database": {
+			"Type": "AWS::RDS::DBInstance",
+			"Condition": "WithDatabase",
+			"DeletionPolicy": "Retain",
+			"UpdateReplacePolicy": "Retain",
+			"Properties": {
+				"Engine": "postgres",
+				"EngineVersion": {
+					"Ref": "DatabaseEngineVersion"
+				},
+				"EngineLifecycleSupport": "open-source-rds-extended-support-disabled",
+				"DBInstanceClass": {
+					"Ref": "DatabaseClass"
+				},
+				"DBName": {
+					"Ref": "DatabaseName"
+				},
+				"DBInstanceIdentifier": {
+					"Fn::Sub": "${EnvironmentName}-postgres"
+				},
+				"MasterUsername": {
+					"Ref": "DatabaseUser"
+				},
+				"MasterUserPassword": {
+					"Fn::Sub": "{{resolve:ssm-secure:${DatabasePasswordParameter}:${DatabasePasswordVersion}}}"
+				},
+				"AllocatedStorage": "20",
+				"StorageType": "gp3",
+				"StorageEncrypted": true,
+				"MultiAZ": false,
+				"MonitoringInterval": 0,
+				"PubliclyAccessible": false,
+				"EnablePerformanceInsights": false,
+				"DBSubnetGroupName": {
+					"Ref": "DatabaseSubnets"
+				},
+				"VPCSecurityGroups": [
+					{
+						"Ref": "DatabaseSecurityGroup"
+					}
+				],
+				"BackupRetentionPeriod": 1,
+				"DeletionProtection": true,
+				"CopyTagsToSnapshot": true,
+				"AutoMinorVersionUpgrade": true,
+				"Tags": [
+					{
+						"Key": "Project",
+						"Value": "CampusShift"
+					},
+					{
+						"Key": "Environment",
+						"Value": {
+							"Ref": "EnvironmentName"
+						}
+					}
+				]
+			}
+		},
+		"ApplicationLogs": {
+			"Type": "AWS::Logs::LogGroup",
+			"Condition": "WithLogs",
+			"DeletionPolicy": "Retain",
+			"UpdateReplacePolicy": "Retain",
+			"Properties": {
+				"LogGroupName": {
+					"Fn::Sub": "/campusshift/${EnvironmentName}"
+				},
+				"RetentionInDays": 7
+			}
+		}
+	},
+	"Outputs": {
+		"InstanceId": {
+			"Value": {
+				"Ref": "Backend"
+			}
+		},
+		"BackendIp": {
+			"Value": {
+				"Fn::GetAtt": [
+					"Backend",
+					"PublicIp"
+				]
+			}
+		},
+		"BackendSecurityGroupId": {
+			"Value": {
+				"Ref": "BackendSecurityGroup"
+			}
+		},
+		"DatabaseId": {
+			"Condition": "WithDatabase",
+			"Value": {
+				"Ref": "Database"
+			}
+		},
+		"DatabaseHost": {
+			"Condition": "WithDatabase",
+			"Value": {
+				"Fn::GetAtt": [
+					"Database",
+					"Endpoint.Address"
+				]
+			}
+		},
+		"DatabasePort": {
+			"Condition": "WithDatabase",
+			"Value": {
+				"Fn::GetAtt": [
+					"Database",
+					"Endpoint.Port"
+				]
+			}
+		},
+		"DatabaseUser": {
+			"Condition": "WithDatabase",
+			"Value": {
+				"Ref": "DatabaseUser"
+			}
+		},
+		"DatabaseName": {
+			"Condition": "WithDatabase",
+			"Value": {
+				"Ref": "DatabaseName"
+			}
+		},
+		"LogGroup": {
+			"Condition": "WithLogs",
+			"Value": {
+				"Ref": "ApplicationLogs"
+			}
+		}
+	}
+}

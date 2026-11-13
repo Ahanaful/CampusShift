@@ -1,5 +1,101 @@
 # Verification
 
+## Stage B serverless preparation — November 13, 2026
+
+Current implementation/runbook: [serverless deployment](aws-serverless-deployment.md).
+Nothing is deployed. No account plan, Advanced Features, IAM/SCP policy, existing
+AWS resource, Git commit or push was changed. Earlier Stage A and research-only
+results below are historical; the helper now defaults to Ohio and accepts the
+expected AWS-managed project human role.
+
+- Backend: `cd backend; .venv/Scripts/python.exe -m unittest discover -s tests -q`:
+  **158 tests, OK, 6 skipped** (three PostgreSQL-only checks and three inherited
+  injected-exception tests whose TestClient re-raise assertions are covered in
+  their original tests; Mangum returns an HTTP 500 instead).
+- PostgreSQL: `backend/.venv/Scripts/python.exe scripts/test_postgresql.py`:
+  **158 tests, OK, 3 skipped**, against disposable local PostgreSQL 16.15. Included
+  real Alembic upgrade/check/downgrade/upgrade, repeatable migration and seed jobs,
+  DML app-role access/DDL denial, NullPool physical connection closure, concurrent
+  writes and the existing phase 2–5 contracts. Backup/restore and overwrite/
+  populated-target/approval refusals passed with synthetic counts `6|1|14|2|4`.
+  The helper removed its own test container.
+- Existing auth, scheduling, workflow and attendance test contracts also ran
+  through **real Mangum HTTP API v2 event handling**, including JWT, department
+  ownership, CORS, status/body/CSV handling and sanitized unexpected HTTP 500.
+- Scheduler: `backend/.venv/Scripts/python.exe -m unittest discover -s scheduler/tests -v`:
+  **15 passed**.
+- Frontend: ESLint and Vite production build passed with local Node 22.22.0.
+  Browser network timeout now allows 35 seconds for Aurora resume; no write retry.
+- CloudFormation: `cfn-lint` passed for platform, frontend, serverless and artifact
+  templates. AWS **ValidateTemplate in us-east-2** passed for the new backend,
+  artifact bucket and reused frontend templates. This creates no resources and
+  does not establish create permissions, capacity or end-to-end networking.
+- Read-only refresh confirmed intended account ending 7313, ACTIVE FREE/$100,
+  Aurora PostgreSQL 16.15/db.serverless orderable in Ohio with min capacity 0,
+  Lambda concurrency 10/unreserved 10, and successful Secrets Manager metadata
+  listing. Detailed account evidence remains ignored in `.local/serverless/`.
+- Linux artifact: built Python 3.12/x86_64 ZIP using a digest-pinned official Lambda
+  Docker image, full dependency constraints and Ohio RDS CA. Actual ZIP smoke
+  tests use `scripts/verify_lambda_package.py` in a container with **no network**:
+  native psycopg/Argon2 imports, cached adapter/warm request, DB-free health,
+  private 0600 passfile/0700 directory and escaping, no packaged tests/.env/DBs.
+  Final ZIP: **13,364,265 bytes compressed / 42,608,152 bytes unpacked**.
+  Final measured local Docker run: cold extraction/import/health **1,698 ms**, warm
+  health **1 ms**, 50 students/35 weekly staffing requirements **1,761 ms** with
+  100% coverage. These are workstation measurements, not deployed Lambda latency
+  or Aurora performance guarantees. Final package metadata is ignored locally.
+
+**Still requires approved deployment:** actual resource creation, execution-role
+and service-linked-role permissions, CloudFront/HTTP API browser behavior,
+private Aurora TLS access, AWS cold starts, 0-ACU pause/resume timing, concurrent
+capacity at 1 ACU/1024 MiB, observed credit use, and a reviewed snapshot restore
+drill. Follow the explicit cloud checklist in the current runbook. No such cloud
+integration tests, load test or billing alarm creation has run.
+
+## Project-based Free Plan correction - November 13, 2026
+
+The user confirmed the assigned home region is **Ohio/us-east-2**. AWS's primary project documentation shows that AWS manages the organization, SCPs and human-access role; generic account setup/scoped Console-IAM instructions were inappropriate for this project. The managed region policy explains the earlier us-east-1 denial pattern. No policy change or Advanced Features activation is necessary to use the supported regional APIs in Ohio.
+
+Read-only Ohio rechecks succeeded for all previously denied EC2 DescribeVpcs/Subnets/RouteTables/InternetGateways/KeyPairs/InstanceTypes/InstanceTypeOfferings/SecurityGroups/ManagedPrefixLists operations, both RDS instance/orderable-options reads, SSM public AMI GetParameter/DescribeParameters metadata, CloudFormation ListStacks and **both live ValidateTemplate calls**. Lambda ListFunctions and HTTP API listing also succeeded. Existing default VPC/three public subnets were found; no networking was created or modified.
+
+Additional regional reads advertised **Aurora PostgreSQL 16.15/db.serverless** as orderable with minimum capacity **0 ACU**. The official Ohio price catalog reports Aurora Standard Serverless v2 **$0.12/ACU-hour**, Aurora storage **$0.10/GiB-month**, PostgreSQL db.t3.micro **$0.018/hour** and gp3 storage **$0.115/GiB-month**. This establishes advertised regional options/prices, not a deployed cluster, proven pause/resume behavior or a measured workload cost.
+
+The research task changed only local documentation/cost-status metadata. No IAM/SCP policies, account plan, Advanced Features, CLI profile settings, resource creation, stacks/change sets, runtime deployment, commits or pushes occurred. No application code changed and no new application regression run was claimed. Private full evidence is ignored in `.local/aws-project-home-region.json`. See [the corrected decision](aws-project-free-plan-decision.md); previous Stage A findings remain historical observations with a superseded diagnosis.
+
+## AWS Free Plan Stage A — November 13, 2026
+
+Actual Windows/read-only AWS results for the dedicated campusshift profile in **us-east-1**:
+
+- CLI **2.40.2** confirmed. Non-secret region/output preferences created; user completed browser login. The requested `aws sts get-caller-identity --profile campusshift` succeeded. User confirmed the account ending 7313 is the intended new account. No credential/key/token values were printed; configure-list credential rows were redacted in the helper.
+- Free Tier API confirmed **FREE / ACTIVE / USD 100 remaining**, expiring May 12, 2027 at 7:36 p.m. America/Chicago (May 13 00:36 UTC).
+- Current identity is an existing **AccountFullAccessRole** with **AdministratorAccess** attached and no permission boundary. Read-only IAM inspection confirmed this; no role/user/policy was created or changed by the assistant. The tool now refuses provisioning with this known broad identity, pending a reviewed scoped replacement.
+- S3 list, CloudFront distribution/VPC-origin list, CloudWatch log-group list, IAM profile list, budget/credit and quota reads succeeded. S3 returned zero buckets, VPC origins zero items and account budget listing zero budgets. Standard EC2 quota is **5 vCPUs**; quota-read success is not launch authorization.
+- EC2/network/AMI, RDS instance/orderable-options, SSM and CloudFormation reads were **explicitly denied by an organization SCP**. Both live CloudFormation ValidateTemplate requests were attempted and denied by that SCP. DescribeOrganization confirmed member-account status; reading the governing policy document was denied, so its full conditions/intent are unknown. No denial is attributed solely to the Free Plan; extra IAM allows cannot override it. No alternate-region probes or policy modifications were attempted.
+- Three local CloudFormation templates (platform/frontend/optional IAM log role) passed **cfn-lint 1.60.1**. Backend discovery ran **88 tests: 86 passed, 2 PostgreSQL-only tests skipped**. Nine new mocked AWS-tool tests cover explicit profile/environment isolation, redaction, missing login, root/wrong-account rejection, FREE/credit guards, read-only preflight, SCP reporting and broad-role execution refusal. No cloud API is called by these tests.
+- Official public us-east-1 pricing reads confirmed EC2 t3.micro **$0.0104/hour** and RDS PostgreSQL db.t3.micro Single-AZ **$0.018/hour**, gp3 **$0.115/GiB-month**; RDS catalog published November 12. IPv4 **$0.005/hour** comes from AWS pricing; EBS **$0.08/GiB-month** remains an explicit planning rate to recheck in Calculator. Proposed public-origin footprint is **$27.64/month baseline**, **$30–35/month planning envelope**, not a workload-tested cap or a live deployment.
+- Git whitespace checks passed. No application business logic or frontend was changed for this Stage A adaptation; prior Phase 6 build/PostgreSQL evidence below remains historical, not a new claim of deployed verification.
+
+Private full account/organization identifiers and raw preflight evidence are kept only in ignored `.local/` logs. No application resources, IAM entities, budget/alert resources, plan upgrades, organization membership/policy changes, CDK/bootstrap, destructive operations, commits or pushes were performed. Stage A audit is finished with blocking findings: authorized organization policy review, scoped identity and final HTTPS/Stage B resource approval remain. See [Stage A next steps](aws-stage-a.md) and [IAM/profile setup](aws-profile-setup.md).
+
+## Phase 6 preparation
+
+Executed locally on Windows with Python 3.12, Node 22.22.0 and disposable Linux Docker containers:
+
+- **SQLite regression run: 79 tests discovered, 77 passed and 2 PostgreSQL-only tests skipped.** Existing authentication, department/ownership controls, scheduling, publication, leave and attendance remained intact. New checks cover production fail-closed configuration, structured log redaction and database readiness. Test fixtures are isolated and do not alter the developer database.
+- **PostgreSQL regression run: all 79 tests passed** with PostgreSQL **16.15**. Shared API fixtures run in unique disposable PostgreSQL schemas; independent legacy SQLite migration tests continue to exercise SQLite. The full actual Alembic chain upgraded/downgraded/re-upgraded on PostgreSQL, `alembic check` reported no model changes, and synthetic cloud-demo setup preserved a published run/attendance across new connections and repeated seeding. Partial index predicates/uniqueness, concurrent overlapping availability (201/409), concurrent clock-ins (201/409) and stale draft edits (200/409) were verified.
+- **15 independent scheduler tests passed.** No scheduling algorithm rewrite was required.
+- The real `database_backup.sh` created a synthetic custom-format dump and restored it to a new empty local PostgreSQL database. User/run/shift/attendance/audit counts matched: **6 / 1 / 14 / 2 / 4**. Existing-backup overwrite, populated-target restore and restore-without-approval were rejected. No AWS/real employee data was used.
+- **Both CloudFormation templates passed cfn-lint 1.60.1** with no findings. This is local schema/lint validation, not AWS `validate-template` or proof of service permissions. Six direct CloudFront function checks preserved `/api` paths and assets while rewriting SPA routes.
+- **Frontend ESLint and Vite production build passed.** No frontend business logic changes were needed; deployment uses a blank VITE_API_BASE_URL for same-origin API requests.
+- Linux deployment/backup scripts passed Git Bash syntax checks. Nginx configuration passed `nginx -t` in a disposable nginx:stable-alpine container, using a temporary self-signed test fixture and no published ports. This syntax test does **not** validate real origin TLS; deployment still requires a publicly trusted certificate. Python compilation and allowlisted source packaging passed. Private configuration/databases/dependencies are excluded from the archive.
+- The local PostgreSQL test container was removed after each run; Docker images remain available locally. Git diff whitespace checks passed. No AWS resources, remote server changes, commits, pushes or external messages were created.
+
+The local PostgreSQL image ID was `sha256:ca0bd484cb98bf4b24eb1010e73fb3fcbd6714d240fbc1a10eea5b7dbecb641d`. `scripts/test_postgresql.py --image IMAGE_OR_DIGEST` supports exact local image selection. This does not establish compatibility with every RDS PostgreSQL version; inspect permitted versions and run deployed acceptance against the chosen one.
+
+AWS CLI discovery exited with a clear **CLI unavailable** message. No active AWS identity, temporary credentials, creation/pass-role permissions, live CloudFormation validation or resources were verified. A complete read-only discovery tool and commands are provided. A matching trusted API origin certificate/domain, authorized existing networking, approved SSM SecureString/decrypt path, explicit billable-resource approval and actual deployed HTTPS/role/workflow checks remain prerequisites. CloudWatch delivery, Amazon Linux bootstrap/systemd startup, SELinux integration, live RDS TLS, reboot recovery, full cloud recreation, certificate renewal, browser interaction and cloud backup restoration have **not** been executed here. The old README's manual EC2 deployment is recorded history and was not inspected or modified.
+
+Initial local verification exposed SQLite-only database-copy assumptions in concurrency test helpers and an overly specific index-count assertion. The helpers now exercise pooled PostgreSQL directly or an isolated SQLite file, with explicit connection cleanup on Windows; the corrected complete runs passed. Deployment is prepared, not declared complete. See [AWS deployment](aws-deployment.md), [feasibility](aws-architecture.md) and [recovery](sandbox-recovery.md).
+
 ## Phase 5
 
 Executed locally on Windows using Python 3.12 and Node.js 22.22.0:

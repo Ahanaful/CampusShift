@@ -5,14 +5,15 @@ from app.db.session import Base, create_session_factory
 import app.models  # Register the complete model metadata.
 
 target_metadata = Base.metadata
+settings = Settings.from_env()
 
 if context.is_offline_mode():
-    context.configure(url=Settings.from_env().database_url, target_metadata=target_metadata,
-                      literal_binds=True, render_as_batch=True)
+    context.configure(url=settings.database_url, target_metadata=target_metadata,
+                      literal_binds=True, render_as_batch=settings.database_url.startswith("sqlite"))
     with context.begin_transaction():
         context.run_migrations()
 else:
-    engine, _ = create_session_factory(Settings.from_env().database_url)
+    engine, _ = create_session_factory(settings.database_url, **settings.database_options)
     try:
         with engine.connect() as connection:
             sqlite = connection.dialect.name == "sqlite"
@@ -21,7 +22,7 @@ else:
                 # only on this migration connection, then verify every FK below.
                 connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
                 connection.commit()
-            context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
+            context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=sqlite)
             with context.begin_transaction():
                 context.run_migrations()
             if sqlite:

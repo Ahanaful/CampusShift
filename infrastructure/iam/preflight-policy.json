@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AccountIdentityAndCreditRead",
+      "Effect": "Allow",
+      "Action": ["sts:GetCallerIdentity", "freetier:GetAccountPlanState", "freetier:GetFreeTierUsage", "budgets:ViewBudget"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RegionalInfrastructureDiscovery",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeVpcs", "ec2:DescribeSubnets", "ec2:DescribeRouteTables", "ec2:DescribeInternetGateways",
+        "ec2:DescribeSecurityGroups", "ec2:DescribeManagedPrefixLists", "ec2:DescribeKeyPairs", "ec2:DescribeImages",
+        "ec2:DescribeInstances", "ec2:DescribeInstanceTypes", "ec2:DescribeInstanceTypeOfferings", "ec2:DescribeAvailabilityZones",
+        "rds:DescribeDBInstances", "rds:DescribeDBEngineVersions", "rds:DescribeOrderableDBInstanceOptions", "rds:DescribeDBSubnetGroups",
+        "servicequotas:ListServiceQuotas", "servicequotas:GetServiceQuota"
+      ],
+      "Resource": "*",
+      "Condition": {"StringEquals": {"aws:RequestedRegion": "us-east-1"}}
+    },
+    {
+      "Sid": "GlobalAndTemplateRead",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListAllMyBuckets", "cloudfront:ListDistributions", "cloudfront:ListVpcOrigins",
+        "cloudformation:ListStacks", "cloudformation:ValidateTemplate", "cloudformation:GetTemplateSummary",
+        "iam:ListInstanceProfiles", "iam:GetRole", "ssm:DescribeParameters", "logs:DescribeLogGroups"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AmazonLinuxPublicImageParameterRead",
+      "Effect": "Allow",
+      "Action": "ssm:GetParameter",
+      "Resource": "arn:aws:ssm:us-east-1::parameter/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+    }
+  ]
+}

@@ -1,9 +1,12 @@
 from fastapi import HTTPException
+import logging
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.security import DUMMY_HASH, hasher, verify_password
 from app.models import Department, User
+
+logger = logging.getLogger(__name__)
 
 
 def list_departments(db):
@@ -52,6 +55,7 @@ def authenticate(db, email, password):
     user = db.scalar(select(User).where(User.email == str(email).lower()))
     valid = verify_password(password, user.password_hash if user else DUMMY_HASH)
     if not user or not valid:
+        logger.warning("Authentication failed")
         raise HTTPException(401, "Email or password is incorrect.", headers={"WWW-Authenticate": "Bearer"})
     return user
 

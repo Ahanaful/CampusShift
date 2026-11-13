@@ -1,0 +1,2 @@
+# Separate from application runtime; install only for infrastructure validation.
+cfn-lint==1.60.1

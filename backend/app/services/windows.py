@@ -1,7 +1,8 @@
 """Persistence and overlap rules independent of HTTP routing."""
 
 from fastapi import HTTPException
-from sqlalchemy import select, text
+from sqlalchemy import select
+from app.db.transactions import reserve_write
 
 from app.models import Availability, ClassSchedule
 
@@ -19,10 +20,7 @@ def owned_window(db, model, student_id, window_id):
 
 
 def save_window(db, model, student_id, data, window_id=None):
-    # Reserve SQLite's write lock before the overlap read so simultaneous saves
-    # cannot both pass validation and insert conflicting windows.
-    if db.get_bind().dialect.name == "sqlite":
-        db.execute(text("BEGIN IMMEDIATE"))
+    reserve_write(db)
     entry = owned_window(db, model, student_id, window_id) if window_id else None
     query = select(model.id).where(model.student_id == student_id,
         model.day_of_week == data.day_of_week, model.start_time < data.end_time,

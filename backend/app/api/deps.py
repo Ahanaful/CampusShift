@@ -5,12 +5,17 @@ from sqlalchemy.orm import Session
 
 from app.core.security import require_secret
 from app.models import User
+from app.db.transactions import reserve_write
 
 bearer = HTTPBearer(auto_error=False)
 
 
 def get_db(request: Request):
     with request.app.state.session_factory() as session:
+        # Acquire before authentication loads ORM objects, avoiding stale state
+        # while waiting for another worker's invariant-changing transaction.
+        if session.get_bind().dialect.name == "postgresql" and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            reserve_write(session)
         yield session
 
 

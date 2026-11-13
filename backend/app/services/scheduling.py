@@ -1,15 +1,19 @@
 """Translate database snapshots to pure scheduler inputs and persist new drafts."""
 
 from datetime import time
+import logging
 
 from fastapi import HTTPException
-from sqlalchemy import select, text
+from sqlalchemy import select
+from app.db.transactions import reserve_write
 
 from app.models import (AssignedShift, Department,
                         LocationEligibility, ScheduleRun, StaffingRequirement,
                         UnfilledRequirement, User, WorkLocation)
 from app.models import TimeOffRequest
 from scheduler.engine import (ALGORITHM_VERSION, DateRange, Requirement, Student, Window, generate)
+
+logger = logging.getLogger(__name__)
 
 
 def student_inputs(db, department_id, history=None):
@@ -34,11 +38,6 @@ def update_student_status(db, supervisor, student_id, is_active):
     student.is_active = is_active
     db.commit()
     return student
-
-
-def reserve_write(db):
-    if db.get_bind().dialect.name == "sqlite":
-        db.execute(text("BEGIN IMMEDIATE"))
 
 
 def location(db, department_id, location_id):
@@ -165,6 +164,7 @@ def generate_run(db, supervisor, week_start):
     try:
         result = generate(department_id, week_start, inputs, demand)
     except ValueError as exc:
+        logger.warning("Schedule generation validation failed department=%s", department_id)
         raise HTTPException(422, str(exc)) from None
     people_map = {p.id: p for p in people}
     summary = {**result.summary, "timezone": department.timezone,

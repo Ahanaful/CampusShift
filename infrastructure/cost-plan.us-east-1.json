@@ -1,0 +1,82 @@
+{
+  "status": "HISTORICAL us-east-1 quote, not the project deployment target. Read docs/aws-project-free-plan-decision.md before use.",
+  "region": "us-east-1",
+  "profile": "campusshift",
+  "rate_review_date": "2026-11-13",
+  "credit_balance_usd": 100,
+  "credit_balance_evidence": "Confirmed by live Free Tier API; user confirmed current profile is the intended account. SCP resolution pending.",
+  "monthly_hours": 730,
+  "resources": [
+    {
+      "resource": "EC2 Linux t3.micro",
+      "quantity": 1,
+      "hourly_usd": 0.0104,
+      "monthly_usd": 7.59
+    },
+    {
+      "resource": "EC2 encrypted gp3 root volume",
+      "gib": 12,
+      "gib_month_usd": 0.08,
+      "monthly_usd": 0.96
+    },
+    {
+      "resource": "Public IPv4 for current public-origin template",
+      "quantity": 1,
+      "hourly_usd": 0.005,
+      "monthly_usd": 3.65
+    },
+    {
+      "resource": "RDS PostgreSQL db.t3.micro Single-AZ",
+      "quantity": 1,
+      "hourly_usd": 0.018,
+      "monthly_usd": 13.14
+    },
+    {
+      "resource": "RDS encrypted gp3 storage",
+      "gib": 20,
+      "gib_month_usd": 0.115,
+      "monthly_usd": 2.3
+    }
+  ],
+  "fixed_monthly_baseline_usd": 27.64,
+  "low_traffic_planning_envelope_usd": [
+    30,
+    35
+  ],
+  "additional_usage": "Private versioned S3 assets/backup objects; CloudFront requests/transfer/function/invalidation; optional CloudWatch ingestion; snapshots; cross-AZ database traffic; RDS surplus CPU credits. Not hard-capped by this estimate.",
+  "excluded": "Taxes, domain purchases, NAT Gateways, load balancers, extra instances, paid support, Savings Plans, Reserved Instances, Marketplace subscriptions; no assumptions about legacy 750-hour free allowances",
+  "recommended_credit_reserve_usd": 20,
+  "estimated_always_on_months_using_80_usd_at_30_to_35_usd_per_month": [
+    2.29,
+    2.67
+  ],
+  "alerts_to_approve": {
+    "monthly_cost_usd": [
+      10,
+      20,
+      30
+    ],
+    "cumulative_credit_consumption_usd": [
+      25,
+      50,
+      75
+    ],
+    "stop_review_remaining_credit_usd": 20
+  },
+  "warning": "Budgets/alerts do not stop resources. Free Plan expiry/credit exhaustion can close access. Do not upgrade or join Organizations. Recheck current prices/credits and account feature eligibility before Stage C.",
+  "https": {
+    "current_template": "Private S3 + HTTPS CloudFront /api to HTTPS EC2 custom origin; needs an owned API hostname and matching trusted certificate, not supplied",
+    "no_domain_alternative_to_review": "CloudFront VPC origin to private EC2; viewer HTTPS with no purchased domain, private HTTP hop explicitly not end-to-end TLS. Requires template/runtime/network/bootstrap changes, service-linked-role and Free Plan eligibility checks. No NAT or added paid endpoint assumed. Not implemented/approved yet."
+  },
+  "sources": [
+    "https://aws.amazon.com/ec2/instance-types/t3/",
+    "https://aws.amazon.com/ebs/pricing/",
+    "https://aws.amazon.com/vpc/pricing/",
+    "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+    "https://aws.amazon.com/cloudfront/pricing/"
+  ],
+  "account_plan_observed": "FREE / ACTIVE",
+  "account_plan_expiry_utc": "2027-05-13T00:36:01.583000+00:00",
+  "historical_deployment_blocker": "Explicit organization SCP denies EC2/RDS/SSM/CloudFormation reads; current login role has AdministratorAccess and must be scoped. No billable resources may be created.",
+  "current_correction": "Assigned home region is us-east-2. Corresponding reads and both CloudFormation validations succeeded. Managed human access/organization are expected; no policy/plan changes made."
+}

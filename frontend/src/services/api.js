@@ -22,7 +22,8 @@ export async function api(
   const abort = () => controller.abort();
   if (signal?.aborted) controller.abort();
   signal?.addEventListener("abort", abort, { once: true });
-  const timeout = setTimeout(abort, 10000);
+  // Aurora can need ~15 seconds to resume; do not automatically replay writes.
+  const timeout = setTimeout(abort, 35000);
   try {
     const response = await fetch(`${base}/api${path}`, {
       ...options,

@@ -6,12 +6,14 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
+from uuid import uuid4
 
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
 import jwt
-from sqlalchemy import inspect, select
+from sqlalchemy import inspect, select, text
+from sqlalchemy.engine import make_url
 
 from app.core.config import BACKEND_DIR, Settings
 from app.core.security import hasher
@@ -28,7 +30,23 @@ class Phase2Tests(unittest.TestCase):
         cls.password_hash = hasher.hash(PASSWORD)
 
     def setUp(self):
-        self.settings = Settings("sqlite://", "test-only-secret-with-at-least-32-bytes", 30, ("http://localhost:5173",))
+        url = "sqlite://"
+        pg_url = os.getenv("TEST_POSTGRESQL_URL")
+        if pg_url:
+            # Explicit disposable test database only; each test owns a unique schema.
+            admin_engine, _ = create_session_factory(pg_url)
+            schema = "test_" + uuid4().hex
+            with admin_engine.begin() as connection:
+                connection.execute(text(f'CREATE SCHEMA "{schema}"'))
+
+            def remove_schema():
+                with admin_engine.begin() as connection:
+                    connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
+                admin_engine.dispose()
+
+            self.addCleanup(remove_schema)
+            url = make_url(pg_url).update_query_dict({"options": f"-csearch_path={schema}"}).render_as_string(hide_password=False)
+        self.settings = Settings(url, "test-only-secret-with-at-least-32-bytes", 30, ("http://localhost:5173",))
         self.app = create_app(self.settings)
         Base.metadata.create_all(self.app.state.engine)
         self.client = TestClient(self.app)
@@ -43,6 +61,11 @@ class Phase2Tests(unittest.TestCase):
                 db.add(User(id=user_id, full_name=f"User {user_id}", email=f"user{user_id}@example.com",
                             role=role, department_id=department, password_hash=self.password_hash, max_weekly_hours=20))
             db.commit()
+            if pg_url:
+                # Fixtures insert explicit IDs; PostgreSQL sequences need advancing.
+                for table in ("users", "departments"):
+                    db.execute(text(f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), (SELECT max(id) FROM {table}))"))
+                db.commit()
 
     def headers(self, user_id=1):
         now = datetime.now(timezone.utc)

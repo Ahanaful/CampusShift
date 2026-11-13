@@ -1,4 +1,4 @@
-# CampusShift architecture (Phase 5)
+# CampusShift architecture (Phase 6 preparation)
 
 The React application requests `GET /api/health`. In development Vite forwards `/api` to FastAPI at `http://127.0.0.1:8000`. An optional `VITE_API_BASE_URL` supports independently hosted frontends. FastAPI allows the configured local browser origins through CORS.
 
@@ -25,3 +25,5 @@ Publication revalidates current constraints, requires explicit acknowledgement o
 Phase 5 adds attendance records tied permanently to original assigned shifts, correction proposals and before/after audit events. New attendance timestamps use canonical UTC text with explicit Z through a shared SQLAlchemy type, while published local shift windows convert with ZoneInfo/tzdata and explicit DST policies. Clock actions use server time, owner/published-shift validation and configured eligibility windows. Unique/partial indexes and SQLite write reservations prevent duplicate or simultaneous active clock-ins. Corrections are approved atomically with overlap and record-version validation; pending requests never alter actual hours.
 
 The same API client now supports authenticated CSV text downloads. Student and supervisor attendance pages poll active state, distinguish planned wall-clock hours from actual elapsed hours, show department-local timestamps, expose correction review/audit, and retain attendance on archived publications. No GPS/device collection, wage processing, AWS deployment or notification delivery was introduced. See [attendance.md](attendance.md) for workflow, reporting semantics and endpoint details.
+
+Phase 6 adds PostgreSQL/psycopg support, transaction-scoped write serialization across API workers, UTC database sessions, production settings validation, safe JSON logging and database/migration readiness. Local SQLite remains the default. New CloudFormation templates and TLS/systemd configuration prepare a separate Amazon Linux EC2/RDS + private S3/CloudFront target; no new cloud deployment was executed. See [AWS architecture](aws-architecture.md) and [deployment runbook](aws-deployment.md) for prerequisites, approval gates, fallback and known limits. Existing legacy EC2/SQLite hosting is preserved. Notifications/SNS remain separate unfinished cloud work.

@@ -1,0 +1,313 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CampusShift private S3, CloudFront OAC and HTTPS-only API origin. Create only after origin TLS is verified.",
+  "Parameters": {
+    "ApiOriginDomain": {
+      "Type": "String",
+      "AllowedPattern": "[a-zA-Z0-9][a-zA-Z0-9.-]+",
+      "Description": "DNS name resolving to backend with a matching publicly trusted TLS certificate, never an IP address"
+    }
+  },
+  "Resources": {
+    "Assets": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        },
+        "OwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "BucketOwnerEnforced"
+            }
+          ]
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        }
+      }
+    },
+    "OAC": {
+      "Type": "AWS::CloudFront::OriginAccessControl",
+      "Properties": {
+        "OriginAccessControlConfig": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-assets"
+          },
+          "OriginAccessControlOriginType": "s3",
+          "SigningBehavior": "always",
+          "SigningProtocol": "sigv4"
+        }
+      }
+    },
+    "Routes": {
+      "Type": "AWS::CloudFront::Function",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-routes"
+        },
+        "AutoPublish": true,
+        "FunctionConfig": {
+          "Comment": "SPA route rewrite without masking API errors",
+          "Runtime": "cloudfront-js-2.0"
+        },
+        "FunctionCode": "function handler(event) { var r = event.request; if (r.uri !== '/api' && r.uri.indexOf('/api/') !== 0 && r.uri.split('/').pop().indexOf('.') === -1) r.uri = '/index.html'; return r; }"
+      }
+    },
+    "SecurityHeaders": {
+      "Type": "AWS::CloudFront::ResponseHeadersPolicy",
+      "Properties": {
+        "ResponseHeadersPolicyConfig": {
+          "Name": {
+            "Fn::Sub": "${AWS::StackName}-security"
+          },
+          "SecurityHeadersConfig": {
+            "StrictTransportSecurity": {
+              "AccessControlMaxAgeSec": 31536000,
+              "IncludeSubdomains": true,
+              "Override": true
+            },
+            "ContentTypeOptions": {
+              "Override": true
+            },
+            "FrameOptions": {
+              "FrameOption": "DENY",
+              "Override": true
+            },
+            "ReferrerPolicy": {
+              "ReferrerPolicy": "no-referrer",
+              "Override": true
+            },
+            "ContentSecurityPolicy": {
+              "ContentSecurityPolicy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+              "Override": true
+            }
+          }
+        }
+      }
+    },
+    "Distribution": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "Enabled": true,
+          "DefaultRootObject": "index.html",
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "PriceClass": "PriceClass_100",
+          "ViewerCertificate": {
+            "CloudFrontDefaultCertificate": true
+          },
+          "Origins": [
+            {
+              "Id": "assets",
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "Assets",
+                  "RegionalDomainName"
+                ]
+              },
+              "OriginAccessControlId": {
+                "Ref": "OAC"
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": ""
+              }
+            },
+            {
+              "Id": "api",
+              "DomainName": {
+                "Ref": "ApiOriginDomain"
+              },
+              "CustomOriginConfig": {
+                "OriginProtocolPolicy": "https-only",
+                "HTTPSPort": 443,
+                "OriginSSLProtocols": [
+                  "TLSv1.2"
+                ]
+              }
+            }
+          ],
+          "DefaultCacheBehavior": {
+            "TargetOriginId": "assets",
+            "ViewerProtocolPolicy": "https-only",
+            "AllowedMethods": [
+              "GET",
+              "HEAD"
+            ],
+            "Compress": true,
+            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+            "ResponseHeadersPolicyId": {
+              "Ref": "SecurityHeaders"
+            },
+            "FunctionAssociations": [
+              {
+                "EventType": "viewer-request",
+                "FunctionARN": {
+                  "Fn::GetAtt": [
+                    "Routes",
+                    "FunctionARN"
+                  ]
+                }
+              }
+            ]
+          },
+          "CacheBehaviors": [
+            {
+              "PathPattern": "/api/*",
+              "TargetOriginId": "api",
+              "ViewerProtocolPolicy": "https-only",
+              "AllowedMethods": [
+                "GET",
+                "HEAD",
+                "OPTIONS",
+                "PUT",
+                "PATCH",
+                "POST",
+                "DELETE"
+              ],
+              "CachedMethods": [
+                "GET",
+                "HEAD"
+              ],
+              "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+              "OriginRequestPolicyId": "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+              "ResponseHeadersPolicyId": {
+                "Ref": "SecurityHeaders"
+              }
+            },
+            {
+              "PathPattern": "/api",
+              "TargetOriginId": "api",
+              "ViewerProtocolPolicy": "https-only",
+              "AllowedMethods": [
+                "GET",
+                "HEAD",
+                "OPTIONS",
+                "PUT",
+                "PATCH",
+                "POST",
+                "DELETE"
+              ],
+              "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+              "OriginRequestPolicyId": "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+              "ResponseHeadersPolicyId": {
+                "Ref": "SecurityHeaders"
+              }
+            }
+          ],
+          "CustomErrorResponses": [
+            {
+              "ErrorCode": 403,
+              "ErrorCachingMinTTL": 0
+            },
+            {
+              "ErrorCode": 404,
+              "ErrorCachingMinTTL": 0
+            },
+            {
+              "ErrorCode": 500,
+              "ErrorCachingMinTTL": 0
+            },
+            {
+              "ErrorCode": 502,
+              "ErrorCachingMinTTL": 0
+            },
+            {
+              "ErrorCode": 503,
+              "ErrorCachingMinTTL": 0
+            },
+            {
+              "ErrorCode": 504,
+              "ErrorCachingMinTTL": 0
+            }
+          ]
+        }
+      }
+    },
+    "BucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "Assets"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "CloudFrontReadOnly",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudfront.amazonaws.com"
+              },
+              "Action": "s3:GetObject",
+              "Resource": {
+                "Fn::Sub": "${Assets.Arn}/*"
+              },
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Sub": "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+                  }
+                }
+              }
+            },
+            {
+              "Sid": "TLSOnly",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "Assets",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Sub": "${Assets.Arn}/*"
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "AssetsBucket": {
+      "Value": {
+        "Ref": "Assets"
+      }
+    },
+    "DistributionId": {
+      "Value": {
+        "Ref": "Distribution"
+      }
+    },
+    "ApplicationUrl": {
+      "Value": {
+        "Fn::Sub": "https://${Distribution.DomainName}"
+      }
+    }
+  }
+}
