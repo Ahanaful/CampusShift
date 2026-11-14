@@ -1,0 +1,67 @@
+{
+  "decision": "Keep existing EC2 only. Serverless attempt resources were deleted; three secrets marked for deletion with no charge. Earlier retained-secret amounts below describe the pre-cleanup comparison.",
+  "reviewed": "2026-11-13 America/Chicago",
+  "region": "us-east-2",
+  "currency": "USD before credits, allowances and taxes",
+  "hours_per_month": 730,
+  "current_ec2_app": {
+    "t3_micro_compute": 7.592,
+    "20_gib_gp3": 1.6,
+    "one_public_ipv4": 3.65
+  },
+  "current_ec2_app_baseline": 12.842,
+  "retained_secrets_common_to_both_options": 1.2,
+  "current_with_retained_secrets": 14.042,
+  "proposed_rds": {
+    "db_t3_micro_compute": 13.14,
+    "20_gib_gp3": 2.3
+  },
+  "proposed_rds_baseline": 15.44,
+  "proposed_lambda_rds_fixed_including_secrets": 16.64,
+  "small_demo_variable_usage_allowance": {
+    "lambda_api_and_jobs": 0.174,
+    "http_api": 0.01,
+    "logs": 0.053,
+    "s3": 0.073,
+    "cloudfront": 0.106,
+    "cross_az_and_secret_calls": 0.1
+  },
+  "proposed_lambda_rds_demo_model_total": 17.156,
+  "increase_over_ec2_app_excluding_retained_secrets": 4.314,
+  "increase_over_current_including_retained_secrets": 3.114,
+  "increased_percentage_over_current_including_retained_secrets": 22.2,
+  "exclusions": [
+    "CPU surplus credits",
+    "traffic beyond the small demo model",
+    "additional backups/snapshots",
+    "taxes",
+    "HTTPS/domain changes",
+    "discounts or legacy 750-hour allowances"
+  ],
+  "assumptions": [
+    "Both compute options run 730 hours/month",
+    "20 GiB default-performance gp3 per option",
+    "No NAT Gateway, RDS Proxy or paid VPC endpoints",
+    "New architecture replaces EC2; keeping both adds the EC2 cost",
+    "Three retained secrets reused, not duplicated",
+    "10,000 one-second 1 GiB API calls plus ten 30-second jobs, 0.1 GiB logs, 1 GiB S3, 1 GiB CloudFront transfer and 20,000 HTTPS requests",
+    "Variable usage figures are the earlier documented planning allowances, not metered current use"
+  ],
+  "evidence": [
+    "AWS Price List API current Ohio Linux/shared t3.micro: 0.0104/hour",
+    "AWS Price List API Ohio EBS gp3: 0.08/GB-month",
+    "AWS Price List API Ohio PostgreSQL Single-AZ db.t3.micro: 0.018/hour",
+    "AWS Price List API Ohio RDS gp3: 0.115/GB-month",
+    "Live EC2: one running t3.micro, 20 GiB gp3 at 3000 IOPS/125 MiB/s, one public IPv4, CPU credit mode unlimited; no RDS DB instances",
+    "Secrets estimate: three at 0.40/month"
+  ],
+  "sources": [
+    "https://aws.amazon.com/ec2/pricing/on-demand/",
+    "https://aws.amazon.com/ebs/pricing/",
+    "https://aws.amazon.com/vpc/pricing/",
+    "https://aws.amazon.com/rds/postgresql/pricing/",
+    "https://aws.amazon.com/secrets-manager/pricing/"
+  ],
+  "post_cleanup_current_ec2_baseline": 12.842,
+  "post_cleanup_retained_secrets_monthly": 0
+}

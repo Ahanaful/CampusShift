@@ -1,3 +1,5 @@
+> **Historical investigation only.** Use [current EC2 status](aws-current-deployment.md), [profile setup](aws-profile-setup.md) and [operations](aws-deployment.md). The earlier Region/identity blockers and retained serverless proposal are superseded; do not execute historical setup steps.
+
 # CampusShift Stage A: new AWS Free Plan account
 
 > **Superseded diagnosis:** assigned home region is us-east-2. Corresponding Ohio reads and both template validations succeed. Do not ask the owner to change the managed SCP or create a Console IAM user based on this historical report. Read [the corrected project decision](aws-project-free-plan-decision.md).

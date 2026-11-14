@@ -11,7 +11,7 @@ def connect_with_retry(connect, args, params, operational_error, attempts, backo
     """Retry only initial connection establishment, never a statement/transaction.
 
     Authentication/configuration failures fail immediately. A no-SQLSTATE network
-    failure or Aurora 'cannot connect now' can be transient during resume.
+    failure or PostgreSQL 'cannot connect now' can be transient during startup.
     """
     for attempt in range(attempts):
         try:

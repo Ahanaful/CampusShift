@@ -1,28 +1,19 @@
 # CampusShift
 
-**CampusShift is already deployed on EC2 in Ohio:** <http://3.133.115.154>.
-Use the [existing EC2 runbook](docs/aws-deployment.md) and the
-[Phase 6C/6D verification report](docs/aws-ec2-verification.md). Public health,
-frontend delivery and unauthenticated access controls were checked November 13,
-2026. HTTPS, server configuration, deployed revision and authenticated workflows
-remain unverified or incomplete. Do not send real credentials over HTTP.
-
-The Lambda/Aurora and EC2/RDS CloudFormation files are prepared alternatives;
-their deployment is **not established**. Do not provision a replacement or run
-their deployment commands against the existing Ubuntu/SQLite server.
+**Deployment: the existing EC2 application in Ohio (`us-east-2`).** CampusShift runs at http://3.133.115.154 on `CampusShift-Server` (`t3.micro`, 20 GiB gp3). The frontend and `/api/health` return HTTP 200. The abandoned serverless attempt has been torn down; its Lambda-only code, dependency, commands and templates were removed. Use profile **campusshift** and the existing AWS-managed login. See [current status and cleanup evidence](docs/aws-current-deployment.md) and [EC2 operations](docs/aws-deployment.md).
 
 CampusShift helps university departments coordinate student employees, class commitments, and work availability. Phase 5 adds published-shift clock-in/out, actual attendance hours, supervisor monitoring, audited correction approvals, and CSV export. Scheduling, time off, editing, publishing, authentication, profiles and the landing page remain available.
 
-**Phase 6 status:** existing manual EC2/Nginx/Uvicorn/systemd/SQLite hosting is
-the current deployment. Serverless packaging, PostgreSQL support, templates and
-backup tools exist in code. They do not establish cloud deployment or assignment
-requirements. SNS delivery remains unimplemented. Historical account, credit,
-cost and policy observations are dated evidence, not current account verification.
+**EC2 support includes:** source-only release packaging, PostgreSQL compatibility, connection/transaction safety, production configuration validation, readiness checks, structured logging and backup/recovery tools. Local development still defaults to SQLite. Prepared Amazon Linux/RDS and S3/CloudFront templates are optional references, not the existing host's configuration. SNS delivery remains unimplemented.
+
+**Cost review:** approximately **$12.84/month** for the existing EC2 compute, 20 GiB gp3 and public IPv4 at 730 running hours, before credits, taxes, traffic, backups and surplus CPU-credit charges. The three unused attempt secrets are marked for deletion and are not charged. Lambda plus regular RDS modeled at $17.16/month with more deployment work, so EC2 remains selected. Check AWS Settings > Billing for actual credits/spend.
+
+The [project-region investigation](docs/aws-project-free-plan-decision.md) explains the original access correction. [Stage A](docs/aws-stage-a.md), [EC2 deployment](docs/aws-deployment.md), [troubleshooting](docs/aws-troubleshooting.md) and [recovery](docs/sandbox-recovery.md) preserve prior investigation/fallback context; use the current EC2 runbook above for this deployment.
 
 ## Technology and prerequisites
 
 - React 19, Vite 7, JavaScript, Tailwind CSS 4, React Router 7.
-- Python 3.10+ locally (verify the existing Ubuntu server interpreter separately), FastAPI, Uvicorn, SQLAlchemy 2, SQLite/PostgreSQL with psycopg, and Alembic.
+- Python 3.10+ locally (3.11 on the new Amazon Linux server), FastAPI, Uvicorn, SQLAlchemy 2, SQLite/PostgreSQL with psycopg, and Alembic.
 - Argon2id password hashes and signed, short-lived JWT bearer tokens.
 - Node.js 22.13+ and npm (22.22.0 used for verification); Git; Windows PowerShell examples below.
 
@@ -166,24 +157,15 @@ docs/                 Architecture and verification notes
 
 ## Local-development boundaries and AWS constraints
 
-This phase uses bearer access tokens in memory; sign-out clears the client token, and any previously copied token remains valid until expiration. There is no token revocation, refresh flow, password reset, email verification, or deployment hardening such as login rate limiting. The existing manual EC2 deployment is the current hosting target. All authorization is enforced in the backend even if frontend route protection is bypassed.
+This phase uses bearer access tokens in memory; sign-out clears the client token, and any previously copied token remains valid until expiration. There is no token revocation, refresh flow, password reset, email verification, or deployment hardening such as login rate limiting. The current EC2 deployment is verified; see the deployment status linked above. Production hardening remains pending. All authorization is enforced in the backend even if frontend route protection is bypassed.
 
-## Phase 6: existing hosting and prepared alternatives
+The project uses the active AWS Free Plan and AWS-managed project login. Preserve managed policies and the plan. All Regional resources belong in Ohio (`us-east-2`); the earlier SCP denials came from using the wrong Region. Credits and time limits can close project access. DynamoDB migration, SNS/email delivery, shift swaps, payroll and advanced analytics remain separate work.
 
-Follow [the EC2 runbook](docs/aws-deployment.md) for the existing server and
-[the dated verification report](docs/aws-ec2-verification.md) for executed tests,
-security findings and remaining access requirements. The current checkout's
-`APP_ENV=production` requires PostgreSQL and HTTPS CORS; setting it on the SQLite
-host would prevent startup. Do not change the live environment or database to
-satisfy a proposed architecture without review.
+## Phase 6: PostgreSQL and reproducible AWS deployment
 
-[Serverless deployment preparation](docs/aws-serverless-deployment.md), the
-[EC2/RDS proposal](docs/aws-ec2-rds-proposal.md), and the
-[Free Plan investigation](docs/aws-project-free-plan-decision.md) preserve
-alternative designs and historical evidence. Do not follow their creation,
-account-change or replacement steps for the existing deployment. No migration is
-currently necessary to verify the implemented application. The assignment rubric
-was not supplied, so mandatory AWS service requirements remain unconfirmed.
+The existing EC2 application is the selected deployment. Lambda/Aurora and Lambda/RDS were abandoned and their attempt resources removed. Current host facts, costs and cleanup are recorded in [current deployment](docs/aws-current-deployment.md); future changes follow [EC2 operations](docs/aws-deployment.md). No CDK bootstrap is required.
+
+The repository supports PostgreSQL and production validation, but the current host's database/configuration have not been inspected. `/api/health` is liveness; repository `/api/ready` additionally checks migration readiness. Prepared Amazon Linux TLS/systemd scripts must not be run on the existing Ubuntu host as an in-place updater. See the runbook for source packaging and data-preserving update prerequisites. Local-only seed commands remain explicit; never seed a populated cloud database automatically.
 
 ## Phase 3 weekly scheduling demo
 
@@ -351,14 +333,56 @@ Attendance remains linked to its original assigned shift when another schedule v
 See [attendance design and API endpoints](docs/attendance.md). Run the complete verification commands in the previous section; attendance tests are included in backend discovery. Phase 5 adds no AWS service integrations, DynamoDB, GPS, biometrics, payroll/wage calculations, or email/SMS delivery. The application is hosted manually on EC2 as described below.
 
 
-## Existing AWS EC2 deployment
+## Legacy manual AWS EC2 deployment update
 
-The current deployment is the manually configured Ubuntu EC2 instance
-`i-0b662a28fc2d1aeaf` (`CampusShift-Server`) in `us-east-2`, reported under account
-`548280227313`. The instance/account association still requires an authorized AWS
-read. Nginx serves `/var/www/campusshift` and proxies `/api/` to the reported
-systemd-managed Uvicorn listener at `127.0.0.1:8000`. SQLite remains the deployed
-database according to the operator; live schema and demo accounts are unverified.
+Historical reference only: these are prior-account deployment notes, not evidence of infrastructure in the new Free Plan account. Do not reuse the old IP, role, region or instance as the new target. The current project uses campusshift/us-east-2; see the current deployment status above.
 
-See [installation, operations and HTTPS requirements](docs/aws-deployment.md)
-and [executed checks and remaining work](docs/aws-ec2-verification.md).
+CampusShift has been deployed manually from GitHub to an AWS EC2 instance using SSH from a Mac terminal. The following details describe the confirmed server setup; HTTPS and full deployed application testing remain pending.
+
+| Item | Deployment details |
+| --- | --- |
+| Public URL | <http://3.133.115.154> |
+| AWS Region | `us-east-2` (Ohio) |
+| Instance type | `t3.micro` |
+| Operating system | Ubuntu 26.04.1 LTS (64-bit x86_64), as reported for the deployed server |
+| Project directory | `/home/ubuntu/CampusShift` |
+| Backend directory | `/home/ubuntu/CampusShift/backend` |
+| Frontend source directory | `/home/ubuntu/CampusShift/frontend` |
+| Frontend deployment directory | `/var/www/campusshift` |
+| Backend service | `campusshift.service` |
+| systemd configuration | `/etc/systemd/system/campusshift.service` |
+| Nginx configuration | `/etc/nginx/sites-available/campusshift` |
+| Database | SQLite, initialized using Alembic migrations |
+| HTTPS | Not configured |
+
+Nginx serves the built React frontend and proxies `/api/` requests to FastAPI on `127.0.0.1:8000`. FastAPI runs through systemd, and its service is configured to start automatically when EC2 boots. SQLite stores application data on the instance; DynamoDB is not used.
+
+This legacy deployment is manual. There is no GitHub Actions deployment workflow, and copies of this Ubuntu server's Nginx/systemd files are not included. The new Phase 6 Amazon Linux templates/runtime files are tracked separately and have not been applied to this server. The public IP may change after stopping and starting the EC2 instance.
+
+### Server status checks
+
+Run these commands in the SSH session on EC2:
+
+```bash
+sudo systemctl status campusshift.service
+sudo systemctl status nginx
+sudo journalctl -u campusshift.service -n 100 --no-pager
+curl http://127.0.0.1:8000/api/health
+```
+
+The API health endpoint checks liveness only; it does not verify database readiness or the full application workflow.
+
+### Initial data and remaining verification
+
+Database migrations have been run. Creation of the demo department and supervisor account is **not confirmed**, and the demo-data seeding script has not been run or verified as part of this deployment update. Migrations alone do not create these records. See the backend setup section for the explicit demo seed commands; public registration creates student accounts only.
+
+Before treating the deployment as production-ready:
+
+- Configure HTTPS before using real account credentials.
+- Confirm the initial department and supervisor provisioning, then verify registration and login.
+- Test student profiles, classes, availability, staffing locations and requirements, schedule generation/editing/publication, time off, attendance corrections, and CSV export through the public website.
+- Verify frontend page refreshes and direct links, API proxying, and service recovery after an EC2 reboot.
+- Configure and verify SQLite backups and restoration.
+- Add reproducible deployment configuration and document the manual update procedure.
+
+Do not commit server secrets, SSH private keys, or the SQLite database to Git.
