@@ -1,14 +1,14 @@
 # CampusShift
 
-**Stage B serverless deployment preparation is implemented; nothing is deployed.** Use the project-based Free Plan's assigned Ohio region, **us-east-2**, and the existing **campusshift** browser-login profile. The prepared target is private S3/CloudFront + HTTP API/FastAPI Lambda + private Aurora PostgreSQL Serverless v2 (0–1 ACU, five-minute auto-pause). Start with the [current serverless runbook, resources, IAM, costs and approval-gated commands](docs/aws-serverless-deployment.md). Earlier us-east-1/Console-IAM/SCP-change prerequisites below are historical and superseded. No AWS plan/policy changes, resources, commits or pushes were made for Stage B.
+**Deployment: the existing EC2 application in Ohio (`us-east-2`).** CampusShift runs at http://3.133.115.154 on `CampusShift-Server` (`t3.micro`, 20 GiB gp3). The frontend and `/api/health` return HTTP 200. The abandoned serverless attempt has been torn down; its Lambda-only code, dependency, commands and templates were removed. Use profile **campusshift** and the existing AWS-managed login. See [current status and cleanup evidence](docs/aws-current-deployment.md) and [EC2 operations](docs/aws-deployment.md).
 
 CampusShift helps university departments coordinate student employees, class commitments, and work availability. Phase 5 adds published-shift clock-in/out, actual attendance hours, supervisor monitoring, audited correction approvals, and CSV export. Scheduling, time off, editing, publishing, authentication, profiles and the landing page remain available.
 
-**Phase 6 includes:** Mangum Lambda entry point and Linux ZIP builder, connection-only resume retries, unpooled PostgreSQL sessions, private migration/check/seed jobs, serverless CloudFormation templates, Ohio cost estimates, synthetic demo data and cloud test checklist. EC2/RDS templates, TLS host configuration and backup/recovery tools remain as a fallback. Local development continues to default to SQLite; production uses PostgreSQL, not DynamoDB. SNS delivery is still unimplemented and requires a separate notification phase if required by the project proposal.
+**EC2 support includes:** source-only release packaging, PostgreSQL compatibility, connection/transaction safety, production configuration validation, readiness checks, structured logging and backup/recovery tools. Local development still defaults to SQLite. Prepared Amazon Linux/RDS and S3/CloudFront templates are optional references, not the existing host's configuration. SNS delivery remains unimplemented.
 
-**Cost review:** about **$7–12/month before credits** for the documented small demo usage with 60 active database hours. A database kept awake all month can cost approximately **$47–91/month** at 0.5–1 average ACU. The last account read confirmed an ACTIVE FREE plan and $100 credits; this is not a spending cap. Recheck credits and approve the inventory before provisioning. AWS Academy restrictions and old deployment/IP details below are historical.
+**Cost review:** approximately **$12.84/month** for the existing EC2 compute, 20 GiB gp3 and public IPv4 at 730 running hours, before credits, taxes, traffic, backups and surplus CPU-credit charges. The three unused attempt secrets are marked for deletion and are not charged. Lambda plus regular RDS modeled at $17.16/month with more deployment work, so EC2 remains selected. Check AWS Settings > Billing for actual credits/spend.
 
-The [project-region investigation](docs/aws-project-free-plan-decision.md) explains the original access correction. [Stage A](docs/aws-stage-a.md), [EC2 deployment](docs/aws-deployment.md), [troubleshooting](docs/aws-troubleshooting.md) and [recovery](docs/sandbox-recovery.md) preserve prior investigation/fallback context; use the current serverless runbook above for this deployment.
+The [project-region investigation](docs/aws-project-free-plan-decision.md) explains the original access correction. [Stage A](docs/aws-stage-a.md), [EC2 deployment](docs/aws-deployment.md), [troubleshooting](docs/aws-troubleshooting.md) and [recovery](docs/sandbox-recovery.md) preserve prior investigation/fallback context; use the current EC2 runbook above for this deployment.
 
 ## Technology and prerequisites
 
@@ -157,43 +157,15 @@ docs/                 Architecture and verification notes
 
 ## Local-development boundaries and AWS constraints
 
-This phase uses bearer access tokens in memory; sign-out clears the client token, and any previously copied token remains valid until expiration. There is no token revocation, refresh flow, password reset, email verification, or deployment hardening such as login rate limiting. A historical manual AWS demo is documented below; no application deployment is confirmed in the new Free Plan account. Production hardening remains pending. All authorization is enforced in the backend even if frontend route protection is bypassed.
+This phase uses bearer access tokens in memory; sign-out clears the client token, and any previously copied token remains valid until expiration. There is no token revocation, refresh flow, password reset, email verification, or deployment hardening such as login rate limiting. The current EC2 deployment is verified; see the deployment status linked above. Production hardening remains pending. All authorization is enforced in the backend even if frontend route protection is bypassed.
 
-The active account is an AWS Free Plan account, not AWS Academy. IAM is not inherently read-only, and old API Gateway/Cognito restrictions no longer apply. The prepared Stage A policy is read-only, but the actual login currently uses AccountFullAccessRole with AdministratorAccess; this must be scoped before deployment. Live reads found explicit organization SCP denies for EC2/RDS/SSM/CloudFormation, so intended-account and authorized organization-policy review are blockers. Resources normally persist across sessions; credit/time expiry can close account access. Do not upgrade, join Organizations, create broad admin identities or provision without approval. Local setup creates no cloud resources. DynamoDB migration, application SNS/email delivery, shift swaps, payroll and advanced analytics remain separate work.
-
-Next: confirm the intended account, resolve the organization-policy blocker through its authorized owner, establish the scoped login and rerun preflight; then approve the concrete Stage B resource/permission/HTTPS/cost plan before Stage C/D. Infrastructure preparation does not establish deployment success.
+The project uses the active AWS Free Plan and AWS-managed project login. Preserve managed policies and the plan. All Regional resources belong in Ohio (`us-east-2`); the earlier SCP denials came from using the wrong Region. Credits and time limits can close project access. DynamoDB migration, SNS/email delivery, shift swaps, payroll and advanced analytics remain separate work.
 
 ## Phase 6: PostgreSQL and reproducible AWS deployment
 
-The preferred target is private S3/CloudFront for the frontend, an Amazon Linux 2023 EC2 backend, and private single-AZ RDS PostgreSQL. No new IAM roles, API Gateway, Cognito, NAT Gateway or load balancer are required. A reviewed PostgreSQL-on-EC2 fallback is documented if RDS is blocked. Production configuration rejects SQLite; local development remains unchanged.
+The existing EC2 application is the selected deployment. Lambda/Aurora and Lambda/RDS were abandoned and their attempt resources removed. Current host facts, costs and cleanup are recorded in [current deployment](docs/aws-current-deployment.md); future changes follow [EC2 operations](docs/aws-deployment.md). No CDK bootstrap is required.
 
-Safe local checks from the root:
-
-```powershell
-backend/.venv/Scripts/python.exe -m pip install -r backend/requirements-dev.txt
-backend/.venv/Scripts/python.exe -m pip install -r scripts/requirements-infrastructure.txt
-backend/.venv/Scripts/cfn-lint.exe infrastructure/platform.json infrastructure/frontend.json
-backend/.venv/Scripts/python.exe scripts/package_backend.py
-# Requires Docker; creates/removes only a disposable local PostgreSQL test container:
-backend/.venv/Scripts/python.exe scripts/test_postgresql.py
-```
-
-AWS CLI v2.40.2 is installed and campusshift is configured for us-east-1. Browser login and STS succeeded as an existing broad AccountFullAccessRole, which is not the intended scoped identity. Free Plan/credits reads succeeded; EC2/RDS/SSM/CloudFormation reads and live template validation are blocked by an organization SCP. Follow the linked identity/policy review before deployment. These commands are read-only rechecks:
-
-```powershell
-aws login --profile campusshift --region us-east-1
-aws sts get-caller-identity --profile campusshift
-backend/.venv/Scripts/python.exe scripts/aws_deploy.py --profile campusshift --region us-east-1 profile-info
-backend/.venv/Scripts/python.exe scripts/aws_deploy.py --profile campusshift --region us-east-1 preflight
-backend/.venv/Scripts/python.exe scripts/aws_deploy.py --profile campusshift --region us-east-1 validate platform
-backend/.venv/Scripts/python.exe scripts/aws_deploy.py --profile campusshift --region us-east-1 validate frontend
-# Offline cost/resource review; creates nothing:
-backend/.venv/Scripts/python.exe scripts/aws_deploy.py --profile campusshift --region us-east-1 plan
-```
-
-Stage A authenticated and verified the current profile's FREE/ACTIVE plan and $100 credits; expiration is May 12, 2027 at 7:36 p.m. America/Chicago. Intended account is confirmed; scoped identity, organization-policy resolution, exact creation eligibility and deployment remain outstanding. No cloud provisioning or IAM changes were performed. The existing public-origin templates require an owned API DNS name and matching trusted certificate, reviewed networking and secure password delivery. A no-purchased-domain CloudFront VPC-origin alternative is documented for Stage B but requires private-network/bootstrap/template changes and is not implemented by the current templates. Never substitute public HTTP authentication. The public-origin estimate is about $27.64/month baseline, with a $30–35 small-demo envelope before credits/free allowances; $100 does not guarantee six months always-on. See the dated cost review and obtain explicit approval before provisioning. No CDK/bootstrap is needed.
-
-`/api/health` is liveness; `/api/ready` additionally checks database/migration readiness. The new runtime uses systemd/non-root Uvicorn workers without development reload, protected libpq passfile/JWT configuration, TLS Nginx, JSON logs, and optional CloudWatch with an explicitly permitted existing profile. See the runbook for required environment variables, exact change-set/deployment/upload/seed/backup/restore commands, manual acceptance and separately approved teardown. No real student records are imported into the sandbox. Existing SQLite seed commands remain local-only; the explicit `app.seed_cloud_demo --synthetic-demo` command supports fictional PostgreSQL data and preserves existing passwords/history.
+The repository supports PostgreSQL and production validation, but the current host's database/configuration have not been inspected. `/api/health` is liveness; repository `/api/ready` additionally checks migration readiness. Prepared Amazon Linux TLS/systemd scripts must not be run on the existing Ubuntu host as an in-place updater. See the runbook for source packaging and data-preserving update prerequisites. Local-only seed commands remain explicit; never seed a populated cloud database automatically.
 
 ## Phase 3 weekly scheduling demo
 
@@ -363,7 +335,7 @@ See [attendance design and API endpoints](docs/attendance.md). Run the complete 
 
 ## Legacy manual AWS EC2 deployment update
 
-Historical reference only: these are prior-account deployment notes, not evidence of infrastructure in the new Free Plan account. Do not reuse the old IP, role, region or instance as the new target. The new target remains campusshift/us-east-1 with no confirmed application resources.
+Historical reference only: these are prior-account deployment notes, not evidence of infrastructure in the new Free Plan account. Do not reuse the old IP, role, region or instance as the new target. The current project uses campusshift/us-east-2; see the current deployment status above.
 
 CampusShift has been deployed manually from GitHub to an AWS EC2 instance using SSH from a Mac terminal. The following details describe the confirmed server setup; HTTPS and full deployed application testing remain pending.
 

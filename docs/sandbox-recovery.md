@@ -1,3 +1,5 @@
+> **Current deployment is the existing EC2 server in Ohio.** The serverless attempt was removed. Preserve the instance and root disk; inspect the actual database and backups before restoration. Use [current status](aws-current-deployment.md) and [operations](aws-deployment.md); earlier sandbox scenarios below are historical.
+
 # AWS Free Plan recovery (legacy filename)
 
 The active target is the new AWS Free account plan, profile campusshift, us-east-1. This filename is retained for existing links; AWS Academy session resets and LabRole assumptions no longer apply. See [Stage A](aws-stage-a.md) and [deployment runbook](aws-deployment.md).

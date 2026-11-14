@@ -17,14 +17,14 @@ spec.loader.exec_module(deploy)
 
 class AWSPreflightTests(unittest.TestCase):
     def test_wrong_region_stops_before_mutation(self):
-        arguments = ["aws_deploy.py", "--region", "us-east-1", "execute", "campusshift-api", "review-example", "--expected-account", "123456789012", "--approve-costs"]
+        arguments = ["aws_deploy.py", "--region", "us-east-1", "execute", "campusshift-platform", "review-example", "--expected-account", "123456789012", "--approve-costs"]
         with patch.object(sys, "argv", arguments), patch.object(deploy.shutil, "which", return_value="aws"), patch.object(deploy.AWS, "call", return_value={"Account": "123456789012", "Arn": "arn:aws:sts::123456789012:assumed-role/AccountFullAccessRole/session"}) as call:
             with self.assertRaisesRegex(RuntimeError, "home region"):
                 deploy.main()
             self.assertEqual(call.call_count, 1)
 
     def test_destructive_change_set_cannot_execute(self):
-        arguments = ["aws_deploy.py", "execute", "campusshift-api", "review-example", "--expected-account", "123456789012", "--approve-costs"]
+        arguments = ["aws_deploy.py", "execute", "campusshift-platform", "review-example", "--expected-account", "123456789012", "--approve-costs"]
         for change in ({"Action": "Remove"}, {"Action": "Modify", "Replacement": "Conditional"}):
             replies = [{"Account": "123456789012", "Arn": "arn:aws:sts::123456789012:assumed-role/AccountFullAccessRole/session"},
                        {"accountPlanType": "FREE", "accountPlanStatus": "ACTIVE", "accountPlanRemainingCredits": {"amount": 100}},
@@ -33,13 +33,6 @@ class AWSPreflightTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "remove/replace"):
                     deploy.main()
                 self.assertEqual(call.call_count, 3)
-
-    def test_private_seed_requires_separate_demo_approval(self):
-        with patch.object(deploy.getpass, "getpass") as prompt, patch.object(deploy.subprocess, "run") as run:
-            with self.assertRaisesRegex(RuntimeError, "approve-demo-data"):
-                deploy.invoke_job(deploy.AWS("us-east-2"), "example-jobs", "seed")
-            prompt.assert_not_called()
-            run.assert_not_called()
 
     def test_all_cli_calls_use_named_profile_and_no_ambient_credentials(self):
         aws = deploy.AWS("us-east-1", "campusshift")
@@ -123,7 +116,7 @@ class AWSPreflightTests(unittest.TestCase):
             self.assertIn("cannot override", report["policy_blocker"])
 
     def test_project_managed_role_reaches_plan_gate_without_policy_changes(self):
-        arguments = ["aws_deploy.py", "execute", "campusshift-api", "review-example", "--expected-account", "123456789012", "--approve-costs"]
+        arguments = ["aws_deploy.py", "execute", "campusshift-platform", "review-example", "--expected-account", "123456789012", "--approve-costs"]
         identity = {"Account": "123456789012", "Arn": "arn:aws:sts::123456789012:assumed-role/AccountFullAccessRole/session"}
         with patch.object(sys, "argv", arguments), patch.object(deploy.shutil, "which", return_value="aws"), patch.object(deploy.AWS, "call", side_effect=[identity, {"accountPlanType": "PAID"}]) as call:
             with self.assertRaisesRegex(RuntimeError, "ACTIVE FREE"):

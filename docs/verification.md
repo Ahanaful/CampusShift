@@ -1,9 +1,40 @@
 # Verification
 
+## EC2 reversion and serverless teardown — November 13, 2026
+
+The user authorized deleting the attempt resources and pushing the EC2-only repository. Current facts and cleanup receipts are summarized in [current deployment](aws-current-deployment.md). All three stacks, the versioned artifact/bucket, logs, DB configuration and separate private network were deleted. The three secrets are marked for deletion with no ongoing charges. Service listings confirmed absence of the attempt's active resources; existing EC2/default VPC/root disk were preserved. No host data, plan or managed-policy changes occurred.
+
+Lambda handlers/jobs/runtime/builders, adapter dependency and serverless templates/commands were removed. Shared application correctness and PostgreSQL support remain. Reversion verification:
+
+- Backend: 90 tests passed, 2 PostgreSQL-only tests skipped, using the existing Python environment. TestClient startup stalled in the restricted sandbox; the full suite passed outside it in 33.4 seconds. No cloud database was used.
+- Scheduler: 15 tests passed.
+- Frontend: ESLint and Vite production build passed using Node 22.20.0. The EC2 API timeout is restored to 10 seconds; writes are not automatically replayed.
+- EC2 source archive: 50 allowlisted files; no Lambda runtime, `.env`, database or test files. Modified Python files parsed; local Markdown links and cost JSON checked; Git whitespace and staged credential-pattern checks passed.
+- AWS: EC2 instance/system/EBS reachability checks passed; instance/root-volume IDs unchanged. Frontend `/` and `/api/health` returned HTTP 200 after cleanup. Ohio/us-east-1 log groups, relevant WAF scopes and RDS manual snapshots were empty. No active attempt stacks, buckets, databases, APIs, functions or distributions remained.
+- Repository comparison with fetched `origin/main` showed no incoming commits before the reversion commit. Unrelated untracked files were excluded.
+
+Older entries below are historical evidence, not a description of current retained resources or active commands.
+
+## EC2 versus Lambda/RDS cost decision — November 13, 2026
+
+Rechecked the running EC2 resource footprint, CPU credit mode, absence of RDS instances and ACTIVE FREE/$100 plan. Queried current Ohio EC2/RDS compute and gp3 prices through AWS Price List API; calculated estimates with Decimal arithmetic. Results and assumptions are in `infrastructure/cost-comparison.us-east-2.json`: existing EC2 $12.842/month baseline, $14.042 including retained secrets; proposed Lambda/RDS light-demo model $17.156. Public IPv4 uses AWS's $0.005/hour list rate. User's condition selects EC2 because the proposed route is more expensive and adds deployment complexity. No cloud mutations or new application tests were needed for this cost review.
+
+Current live deployment evidence is recorded in [deployment status](aws-current-deployment.md). Earlier results below describe the named historical stages.
+
+## Deployment attempt — November 13, 2026
+
+- Existing EC2 frontend and health returned HTTP 200; EC2 health checks passed.
+- Rebuilt Linux Lambda ZIP smoke tests passed; frontend build and lint passed with Node 22.20.0.
+- All three templates passed cfn-lint 1.60.1 and AWS ValidateTemplate. Six AWS Guard S3/RDS rules ran; three findings were manually reviewed as string/boolean and Aurora inheritance checker limitations, recorded in current status.
+- Artifact, API and frontend change sets passed AWS pre-deployment validation; reviewed changes contained additions only. Artifact stack executed successfully and the ZIP upload size was verified with S3 HeadObject.
+- API stack execution failed on Aurora Free Plan eligibility and rolled back. No database, Lambda or HTTP API remains. Frontend change set was not executed. Cloud migrations, application acceptance and pause/resume verification did not run.
+- Three secrets, three log groups, private networking and DB configuration groups were retained by template policy and confirmed by service listings. User chose to keep Free Plan and retain these resources. No cleanup, plan/policy change or EC2 modification occurred.
+- Raw post-attempt inventory is ignored in `.local/serverless/deployment-inventory.json`. No configured CloudTrail trail exists; service event history provides reduced audit coverage.
+
 ## Stage B serverless preparation — November 13, 2026
 
 Current implementation/runbook: [serverless deployment](aws-serverless-deployment.md).
-Nothing is deployed. No account plan, Advanced Features, IAM/SCP policy, existing
+Historical preparation result: this stage did not deploy resources. No account plan, Advanced Features, IAM/SCP policy, existing
 AWS resource, Git commit or push was changed. Earlier Stage A and research-only
 results below are historical; the helper now defaults to Ohio and accepts the
 expected AWS-managed project human role.

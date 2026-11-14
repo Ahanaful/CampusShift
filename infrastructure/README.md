@@ -1,11 +1,13 @@
 # Infrastructure
 
-> Current Stage B: `serverless-artifacts.json`, `serverless.json` and `frontend.json` prepare the Ohio Lambda/Aurora target; all passed local lint and AWS ValidateTemplate. Read the [current runbook and cost review](../docs/aws-serverless-deployment.md). No resources are deployed. `platform.json` and the EC2 notes below remain a fallback; earlier us-east-1/Console-IAM prerequisites are superseded.
+**Current target: the existing EC2 application in Ohio (`us-east-2`).** The serverless attempt was torn down and its templates removed. [Current inventory, costs and cleanup evidence](../docs/aws-current-deployment.md) are authoritative.
 
-Phase 6 preparation: `platform.json` defines an Amazon Linux EC2 backend, restrictive security groups, optional private single-AZ RDS PostgreSQL and optional seven-day CloudWatch log group. `frontend.json` defines a private versioned S3 bucket, CloudFront OAC, SPA route rewriting and HTTPS-only `/api` forwarding. No IAM resources are created.
+- `cost-plan.us-east-2.json` models the existing running `t3.micro`, 20 GiB gp3 and public IPv4: about $12.84/month before credits/extras. No attempt-secret charges remain after marking them for deletion.
+- `cost-comparison.us-east-2.json` preserves the EC2 versus Lambda/RDS comparison and records post-cleanup costs.
+- `platform.json` and its example parameters prepare a **new Amazon Linux EC2** deployment with optional private RDS PostgreSQL/logging. They do not manage the existing manual Ubuntu host and must not be executed as its updater.
+- `frontend.json` and its example parameters prepare optional private S3/CloudFront with an HTTPS origin. No such resources are currently deployed.
+- `runtime/` contains prepared systemd, TLS Nginx, logging and log rotation configuration; host paths/services must be inspected before reuse.
+- `iam/` contains historical scoped-policy proposals. Human access is AWS-managed; do not apply them to managed roles.
+- `cost-plan.us-east-1.json` is historical pricing research and must not select a resource Region.
 
-Start with [Stage A and cost/permission review](../docs/aws-stage-a.md), [secure IAM/profile setup](../docs/aws-profile-setup.md), then [feasibility and architecture](../docs/aws-architecture.md), then [deployment instructions](../docs/aws-deployment.md). Templates have been prepared for review; their existence does not mean AWS permissions or deployment were verified. Existing VPC/subnets, key pair, approved SSM SecureString, a real API DNS name and trusted origin certificate are prerequisites. Parameter examples contain placeholders only. Do not execute until costs and the exact change set are approved.
-
-`runtime/` contains systemd, Nginx TLS, structured logging, log rotation and optional CloudWatch agent configuration. Region is selected by AWS CLI, not hardcoded into resources. Preserve the documented legacy manual deployment until a replacement is verified.
-
-The current profile/region are campusshift/us-east-2. Stage B prepares code only. The existing managed project human role is expected; do not follow the historical Console-user instructions or apply `iam/preflight-policy.json` to managed roles. `serverless.json` creates two scoped Lambda execution roles with `CAPABILITY_IAM` after approval; no instance profile or CDK bootstrap is needed. Aurora PostgreSQL 16.15 and zero-ACU support were confirmed read-only in Ohio. Review `cost-plan.us-east-2.json`; `cost-plan.us-east-1.json` is historical. Creation rights, capacity and deployed performance remain untested.
+No default provisioning or cleanup runs from these files. Use [EC2 operations](../docs/aws-deployment.md). Keep project resources in the selected Region and preserve the active Free Plan. No CDK/bootstrap or Lambda@Edge is used.

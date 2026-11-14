@@ -11,9 +11,6 @@ import subprocess
 import sys
 import time
 import re
-import hashlib
-import getpass
-import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -82,49 +79,6 @@ def known_broad_identity(identity):
     return ":assumed-role/AccountFullAccessRole/" in identity.get("Arn", "")
 
 
-def package_metadata():
-    directory = ROOT / ".local/serverless"
-    metadata = json.loads((directory / "backend.json").read_text())
-    archive = directory / "backend.zip"
-    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
-    if metadata["sha256"] != digest or metadata["code_key"] != f"backend/{digest}.zip":
-        raise RuntimeError("Package changed; rebuild the Linux Lambda ZIP before uploading")
-    return archive, metadata
-
-
-def invoke_job(aws, function, action, approve_demo=False):
-    payload = {"action": action}
-    if action == "seed":
-        if not approve_demo:
-            raise RuntimeError("Synthetic data requires --approve-demo-data")
-        password = getpass.getpass("Synthetic demo password (12+ characters, never logged): ")
-        if len(password) < 12 or len(password) > 128:
-            raise RuntimeError("Demo password must contain 12 to 128 characters")
-        payload["demo_password"] = password
-    # Password is never in argv, stdout, CLI errors or committed files. Private
-    # local temp files are removed even on failure; Windows inherits user TEMP ACL.
-    with tempfile.TemporaryDirectory(prefix="campusshift-job-") as directory:
-        source = Path(directory) / "request.json"
-        destination = Path(directory) / "response.json"
-        fd = os.open(source, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        with os.fdopen(fd, "w", encoding="utf-8") as stream:
-            json.dump(payload, stream)
-        command = aws.command("lambda", "invoke", "--function-name", function,
-                              "--payload", f"fileb://{source}", str(destination), "--output", "json")
-        command[command.index("--cli-read-timeout") + 1] = "150"
-        # A timeout on a mutating job is ambiguous: never replay automatically.
-        env = {**aws.environment(), "AWS_MAX_ATTEMPTS": "1"}
-        result = subprocess.run(command, capture_output=True, text=True, env=env, timeout=170)
-        if result.returncode:
-            raise RuntimeError("Private job invocation failed; inspect AWS status without retrying a write blindly")
-        metadata = json.loads(result.stdout)
-        response = json.loads(destination.read_text())
-        if metadata.get("FunctionError") or response.get("ok") is not True:
-            raise RuntimeError("Private job failed; inspect safe function logs and database state")
-        allowed = {"ok", "action", "schema_revision", "app_role_created", "run_id", "attendance_records_added", "duration_ms"}
-        print(json.dumps({key: value for key, value in response.items() if key in allowed}, indent=2))
-
-
 def discover(aws, expected_account=None):
     report = {"profile": aws.profile, "region": aws.region, "creation_permissions": "NOT TESTED; reads do not prove create rights or Free Plan feature eligibility", "checks": {}}
     try:
@@ -140,7 +94,6 @@ def discover(aws, expected_account=None):
         "lambda_capacity": ("lambda", "get-account-settings"),
         "http_apis": ("apigatewayv2", "get-apis", "--query", "Items[].Name"),
         "secret_metadata": ("secretsmanager", "list-secrets", "--filters", "Key=name,Values=campusshift", "--query", "SecretList[].{Name:Name,ARN:ARN}"),
-        "aurora_zero_capacity": ("rds", "describe-db-engine-versions", "--engine", "aurora-postgresql", "--engine-version", "16.15", "--query", "DBEngineVersions[].{Version:EngineVersion,Capacity:ServerlessV2FeaturesSupport}"),
         "account_plan_and_credits": ("freetier", "get-account-plan-state"),
         "free_tier_usage": ("freetier", "get-free-tier-usage"),
         "budgets": ("budgets", "describe-budgets", "--account-id", identity["Account"], "--query", "Budgets[].{Name:BudgetName,Limit:BudgetLimit,Actual:CalculatedSpend.ActualSpend} || `[]`"),
@@ -176,7 +129,7 @@ def discover(aws, expected_account=None):
             report["checks"][name] = {"status": status, "detail": detail}
     plan = report["checks"]["account_plan_and_credits"].get("result", {})
     report["free_plan_gate"] = "confirmed" if (plan.get("accountPlanType") == "FREE" and plan.get("accountPlanStatus") == "ACTIVE" and plan.get("accountPlanRemainingCredits", {}).get("amount", 0) > 0) else "blocked_or_unverified"
-    report["service_eligibility"] = "Service reads are evidence of read access only. Verify exact EC2/RDS configuration and CloudFront features in the Free Plan console before approval; no creates or dry-run launches were attempted."
+    report["service_eligibility"] = "Service reads are evidence of read access only. Read-only discovery does not authorize new resources. Existing EC2 is the selected deployment; optional RDS/CloudFront templates require separate cost and configuration review."
     budgets = report["checks"]["budgets"].get("result")
     report["budget_setup"] = "no_budgets_found" if budgets == [] else "inspect_budget_alerts_in_console; thresholds/credit treatment not verified"
     if any(item["status"] == "blocked_by_scp" for item in report["checks"].values()):
@@ -195,13 +148,12 @@ def main():
         discovery.add_argument("--expected-account", help="Optionally compare STS with the account ID confirmed in your Console")
     sub.add_parser("profile-info", help="Redacted aws configure list output")
     sub.add_parser("plan", help="Offline proposed resources/cost assumptions; no AWS access")
-    sub.add_parser("package-lambda", help="Local Docker Linux ZIP build; no AWS account calls")
     validate = sub.add_parser("validate")
-    validate.add_argument("template", choices=["platform", "frontend", "serverless-artifacts", "serverless"])
+    validate.add_argument("template", choices=["platform", "frontend"])
     outputs = sub.add_parser("outputs")
     outputs.add_argument("stack")
     change = sub.add_parser("change-set")
-    change.add_argument("template", choices=["platform", "frontend", "serverless-artifacts", "serverless"])
+    change.add_argument("template", choices=["platform", "frontend"])
     change.add_argument("stack")
     change.add_argument("parameters", type=Path, help="JSON array of ParameterKey/ParameterValue, no secret values")
     change.add_argument("--type", choices=["CREATE", "UPDATE"], default="CREATE")
@@ -210,26 +162,13 @@ def main():
     execute.add_argument("change_set")
     upload = sub.add_parser("upload-frontend")
     upload.add_argument("stack")
-    backend = sub.add_parser("upload-backend", help="Upload hash-verified Linux ZIP to approved artifact stack")
-    backend.add_argument("stack")
-    parameters = sub.add_parser("parameters", help="Read-only outputs + local metadata to ignored parameter JSON")
-    parameters.add_argument("template", choices=["serverless", "frontend"])
-    parameters.add_argument("stack", help="Artifact stack for serverless, API stack for frontend")
-    parameters.add_argument("--environment", default="campusshift-demo")
-    job = sub.add_parser("job", help="Private IAM Lambda job; can wake and modify the database")
-    job.add_argument("stack")
-    job.add_argument("job_action", choices=["migrate", "check", "seed"])
-    job.add_argument("--approve-demo-data", action="store_true")
-    for command in (change, execute, upload, backend, job):
+    for command in (change, execute, upload):
         command.add_argument("--expected-account", required=True, help="Explicit authorized AWS account ID")
         command.add_argument("--approve-costs", action="store_true", required=True, help="Use only after reviewing resource/cost plan")
     args = parser.parse_args()
-    if args.action == "package-lambda":
-        subprocess.run([sys.executable, str(ROOT / "scripts/build_lambda.py")], check=True)
-        return 0
     if args.action == "plan":
         if args.region != "us-east-2":
-            raise RuntimeError("The serverless estimate is for the assigned Ohio home region only")
+            raise RuntimeError("The EC2 estimate is for the selected Ohio region only")
         print((ROOT / "infrastructure/cost-plan.us-east-2.json").read_text())
         return 0
     if not shutil.which("aws"):
@@ -250,35 +189,16 @@ def main():
         print(json.dumps(aws.call("cloudformation", "validate-template", "--template-body", f"file://{ROOT / 'infrastructure' / (args.template + '.json')}"), indent=2))
     elif args.action == "outputs":
         print(json.dumps(aws.outputs(args.stack), indent=2))
-    elif args.action == "parameters":
-        values = aws.outputs(args.stack)
-        if args.template == "serverless":
-            _, metadata = package_metadata()
-            values = {"EnvironmentName": args.environment, "CodeBucket": values["ArtifactBucket"], "CodeKey": metadata["code_key"]}
-        else:
-            values = {"ApiOriginDomain": values["ApiOriginDomain"]}
-        destination = ROOT / ".local/serverless" / (args.template + ".parameters.json")
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(json.dumps([{"ParameterKey": key, "ParameterValue": value} for key, value in values.items()], indent=2) + "\n")
-        print(destination)
-    elif args.action == "upload-backend":
-        archive, metadata = package_metadata()
-        bucket = aws.outputs(args.stack)["ArtifactBucket"]
-        subprocess.run(aws.command("s3", "cp", str(archive), f"s3://{bucket}/{metadata['code_key']}", "--sse", "AES256", "--only-show-errors"), env=aws.environment(), check=True)
-        print(json.dumps({"CodeBucket": bucket, "CodeKey": metadata["code_key"]}, indent=2))
-    elif args.action == "job":
-        invoke_job(aws, aws.outputs(args.stack)["JobsFunctionName"], args.job_action, args.approve_demo_data)
     elif args.action == "change-set":
         parameters = json.loads(args.parameters.read_text())
         allowed = json.loads((ROOT / "infrastructure" / f"{args.template}.json").read_text())["Parameters"]
         if any(row["ParameterKey"] not in allowed for row in parameters):
             raise RuntimeError("Unknown template parameter; never pass secret values")
         name = "review-" + str(int(time.time()))
-        capability = ["--capabilities", "CAPABILITY_IAM"] if args.template == "serverless" else []
         result = aws.call("cloudformation", "create-change-set", "--stack-name", args.stack,
                           "--change-set-name", name, "--change-set-type", args.type,
                           "--template-body", f"file://{ROOT / 'infrastructure' / (args.template + '.json')}",
-                          "--parameters", f"file://{args.parameters.resolve()}", *capability)
+                          "--parameters", f"file://{args.parameters.resolve()}")
         print(json.dumps(result, indent=2))
         print(f"Review with: aws --profile {args.profile} --region {args.region} cloudformation describe-change-set --stack-name {args.stack} --change-set-name {name}")
         print("Nothing executed. Review replacements, IAM/pass-role restrictions, costs and TLS prerequisites before execution.")
