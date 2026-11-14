@@ -8,9 +8,9 @@ def main():
     output = root / ".local/campusshift-backend.tar.gz"
     output.parent.mkdir(exist_ok=True)
     directories = ("backend/app", "backend/alembic", "scheduler", "infrastructure/runtime")
-    files = [root / path for path in ("backend/main.py", "backend/requirements.txt", "backend/alembic.ini", "pyproject.toml", "scripts/configure_server.py", "scripts/deploy_backend.sh", "scripts/database_backup.sh")]
+    files = [root / path for path in ("backend/main.py", "backend/requirements.txt", "backend/alembic.ini", "pyproject.toml", "scripts/configure_server.py", "scripts/deploy_backend.sh", "scripts/database_backup.sh", "scripts/sqlite_backup.py")]
     for directory in directories:
-        files.extend(path for path in (root / directory).rglob("*") if path.is_file() and "__pycache__" not in path.parts and "tests" not in path.parts and path.suffix in {".py", ".mako", ".json", ".conf", ".service"})
+        files.extend(path for path in (root / directory).rglob("*") if path.is_file() and "__pycache__" not in path.parts and "tests" not in path.parts and path.suffix in {".py", ".mako", ".json", ".conf", ".service", ".timer"})
     with tarfile.open(output, "w:gz") as archive:
         for path in sorted(set(files)):
             if path.is_symlink():

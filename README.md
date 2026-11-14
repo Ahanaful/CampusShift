@@ -1,6 +1,8 @@
 # CampusShift
 
-**Deployment: the existing EC2 application in Ohio (`us-east-2`).** CampusShift runs at http://3.133.115.154 on `CampusShift-Server` (`t3.micro`, 20 GiB gp3). The frontend and `/api/health` return HTTP 200. The abandoned serverless attempt has been torn down; its Lambda-only code, dependency, commands and templates were removed. Use profile **campusshift** and the existing AWS-managed login. See [current status and cleanup evidence](docs/aws-current-deployment.md) and [EC2 operations](docs/aws-deployment.md).
+EC2 remediation is live: **[HTTPS](https://3.133.115.154)**, API readiness, daily SQLite backups and encrypted off-server copies. See the [rollout results](docs/production-rollout.md) and [rollback plan](docs/ec2-remediation.md).
+
+**Deployment: the existing EC2 application in Ohio (`us-east-2`).** CampusShift runs at https://3.133.115.154 on `CampusShift-Server` (`t3.micro`, 20 GiB gp3). The frontend, `/api/health` and `/api/ready` return 200 over trusted HTTPS. The abandoned serverless attempt has been torn down; its Lambda-only code, dependency, commands and templates were removed. Use profile **campusshift** and the existing AWS-managed login. See [current status and cleanup evidence](docs/aws-current-deployment.md) and [EC2 operations](docs/aws-deployment.md).
 
 CampusShift helps university departments coordinate student employees, class commitments, and work availability. Phase 5 adds published-shift clock-in/out, actual attendance hours, supervisor monitoring, audited correction approvals, and CSV export. Scheduling, time off, editing, publishing, authentication, profiles and the landing page remain available.
 
@@ -13,7 +15,7 @@ The [project-region investigation](docs/aws-project-free-plan-decision.md) expla
 ## Technology and prerequisites
 
 - React 19, Vite 7, JavaScript, Tailwind CSS 4, React Router 7.
-- Python 3.10+ locally (3.11 on the new Amazon Linux server), FastAPI, Uvicorn, SQLAlchemy 2, SQLite/PostgreSQL with psycopg, and Alembic.
+- Python 3.10+ locally (3.12.16 on the existing Ubuntu EC2 server), FastAPI, Uvicorn, SQLAlchemy 2, SQLite/PostgreSQL with psycopg, and Alembic.
 - Argon2id password hashes and signed, short-lived JWT bearer tokens.
 - Node.js 22.13+ and npm (22.22.0 used for verification); Git; Windows PowerShell examples below.
 

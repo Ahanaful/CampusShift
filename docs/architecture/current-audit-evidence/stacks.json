@@ -1,0 +1,4 @@
+{
+  "exit": 254,
+  "data": "aws: [ERROR]: An error occurred (AccessDenied) when calling the DescribeStacks operation: User: arn:aws:iam::548280227313:user/campusshift-diagram-reader is not authorized to perform: cloudformation:ListStacks on resource: arn:aws:cloudformation:us-east-2:548280227313:stack/*/* because no identity-based policy allows the cloudformation:ListStacks action"
+}

@@ -4,13 +4,23 @@ Does not create or modify application records. Never prints credentials/tokens/d
 """
 import argparse
 import getpass
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 import httpx
+
+
+def verify_plaintext_policy(response, https_origin):
+    """Accept rejection or an exact-origin HTTPS redirect, never a downgrade."""
+    if response.status_code == 403:
+        return
+    expected = https_origin.rstrip("/") + "/api/health"
+    location = urljoin(str(response.url), response.headers.get("location", ""))
+    if response.status_code not in {301, 302, 307, 308} or location != expected:
+        raise RuntimeError("Plaintext HTTP must reject requests or redirect to the same HTTPS origin/path")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("url", help="ApplicationUrl from the frontend stack")
+    parser.add_argument("url", help="Trusted HTTPS origin of the existing EC2 application")
     parser.add_argument("--accounts", action="store_true", help="Privately prompt for fictional student/supervisor credentials")
     args = parser.parse_args()
     parts = urlsplit(args.url)
@@ -34,9 +44,8 @@ def main():
         with httpx.Client(timeout=15, follow_redirects=False) as plain:
             # No credentials are ever sent in this HTTP policy probe.
             response = plain.get("http://" + parts.netloc + "/api/health")
-            if response.status_code != 403:
-                raise RuntimeError("CloudFront must reject plaintext HTTP (expected 403)")
-        print("PASS plaintext public HTTP rejected")
+            verify_plaintext_policy(response, args.url)
+        print("PASS plaintext HTTP rejected or redirected securely")
         if args.accounts:
             for role in ("student", "supervisor"):
                 email = input(f"Fictional {role} email: ").strip()

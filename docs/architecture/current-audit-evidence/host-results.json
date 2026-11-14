@@ -1,0 +1,143 @@
+{
+  "git_sha": {
+    "exit": 0,
+    "output": "fc04a91d4a6e5790b2b392409d00e4a5ef99b636",
+    "error": ""
+  },
+  "git_status": {
+    "exit": 0,
+    "output": "",
+    "error": ""
+  },
+  "os": [
+    "PRETTY_NAME=\"Ubuntu 26.04.1 LTS\""
+  ],
+  "service": {
+    "exit": 0,
+    "output": "Restart=always\nMainPID=14572\nNRestarts=0\nExecMainStartTimestamp=Fri 2026-11-13 01:26:10 UTC\nWorkingDirectory=/home/ubuntu/CampusShift/backend\nUser=ubuntu",
+    "error": ""
+  },
+  "services_active": {
+    "exit": 0,
+    "output": "active\nactive",
+    "error": ""
+  },
+  "services_enabled": {
+    "exit": 0,
+    "output": "enabled\nenabled",
+    "error": ""
+  },
+  "process_cwd": "/home/ubuntu/CampusShift/backend",
+  "process_exe": "/home/ubuntu/.local/share/uv/python/cpython-3.12.16-linux-x86_64-gnu/bin/python3.12",
+  "runtime_env_read": true,
+  "db_dialect": "sqlite",
+  "app_env": "unset",
+  "jwt_bytes": 64,
+  "listeners": {
+    "exit": 0,
+    "output": "State  Recv-Q Send-Q Local Address:Port Peer Address:Port\nLISTEN 0      2048       127.0.0.1:8000      0.0.0.0:*   \nLISTEN 0      4096      127.0.0.54:53        0.0.0.0:*   \nLISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*   \nLISTEN 0      511          0.0.0.0:80        0.0.0.0:*   \nLISTEN 0      4096         0.0.0.0:22        0.0.0.0:*   \nLISTEN 0      4096            [::]:22           [::]:*",
+    "error": ""
+  },
+  "nginx_test_exit": 0,
+  "nginx_routes": [
+    "listen 80;",
+    "server_name _;",
+    "root /var/www/campusshift;",
+    "location /api/ {",
+    "proxy_pass http://127.0.0.1:8000;",
+    "location / {",
+    "try_files $uri $uri/ /index.html;"
+  ],
+  "db_path": "/home/ubuntu/CampusShift/backend/campusshift.db",
+  "db_mode": "0o644",
+  "db_integrity": [
+    [
+      "ok"
+    ]
+  ],
+  "db_revision": [
+    [
+      "9e57ab896061"
+    ]
+  ],
+  "tables": [
+    "alembic_version",
+    "departments",
+    "users",
+    "class_schedules",
+    "availability",
+    "work_locations",
+    "location_eligibility",
+    "staffing_requirements",
+    "unfilled_requirements",
+    "time_off_requests",
+    "schedule_events",
+    "schedule_runs",
+    "assigned_shifts",
+    "attendance_records",
+    "attendance_corrections",
+    "attendance_events"
+  ],
+  "counts": {
+    "users": 2,
+    "departments": 1,
+    "class_schedules": 5,
+    "availability": 4,
+    "schedule_runs": 2,
+    "assigned_shifts": 1,
+    "time_off_requests": 0,
+    "attendance_records": 0
+  },
+  "user_role_counts": [
+    [
+      "student",
+      1
+    ],
+    [
+      "supervisor",
+      1
+    ]
+  ],
+  "process_sqlite_files": [
+    "/home/ubuntu/CampusShift/backend/campusshift.db",
+    "/home/ubuntu/CampusShift/backend/campusshift.db",
+    "/home/ubuntu/CampusShift/backend/campusshift.db",
+    "/home/ubuntu/CampusShift/backend/campusshift.db"
+  ],
+  "disk": {
+    "exit": 0,
+    "output": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/root        19G  3.5G   15G  20% /",
+    "error": ""
+  },
+  "memory": {
+    "exit": 0,
+    "output": "total        used        free      shared  buff/cache   available\nMem:           908Mi       399Mi       216Mi       7.0Mi       421Mi       508Mi\nSwap:             0B          0B          0B",
+    "error": ""
+  },
+  "backup_timers": [
+    "Sun 2026-11-15 00:00:00 UTC       21h Sat 2026-11-14 00:00:11 UTC 2h 20min ago dpkg-db-backup.timer           dpkg-db-backup.service"
+  ],
+  "ubuntu_crontab_status": 1,
+  "ubuntu_backup_cron_entries": 0,
+  "root_crontab_status": 1,
+  "root_backup_cron_entries": 0,
+  "backup_config_files": [],
+  "backup_file_candidates": [
+    "/home/ubuntu/CampusShift/backend/campusshift.db"
+  ],
+  "asset_hashes": {
+    "assets/index-D-O9YkoH.css": "23ba69aec4beb6a4b947030723158c7089c867b15506911a600e6d9f73c31e68",
+    "assets/index-DvLhM7V9.js": "fe66531a671ec2a684a66c372d3a3449815d2c19d25e4fb60aa44d3f18ac8de8"
+  },
+  "loopback_checks": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "body": "{\"status\":\"healthy\",\"application\":\"CampusShift\"}"
+    },
+    {
+      "path": "/api/ready",
+      "status": 404
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "exit": 254,
+  "data": "aws: [ERROR]: An error occurred (AccessDeniedException) when calling the GetCostAndUsage operation: User: arn:aws:iam::548280227313:user/campusshift-diagram-reader is not authorized to perform: ce:GetCostAndUsage on resource: arn:aws:ce:us-east-1:548280227313:/GetCostAndUsage because no identity-based policy allows the ce:GetCostAndUsage action"
+}

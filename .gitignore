@@ -189,4 +189,6 @@ override.tf.json
 *.parameters.local.json
 *.dump
 *.backup
+backups/
+*.partial
 aws-discovery.local.json

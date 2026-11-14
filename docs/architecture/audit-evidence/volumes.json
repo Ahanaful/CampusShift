@@ -1,0 +1,38 @@
+{
+  "exit": 0,
+  "data": {
+    "Volumes": [
+      {
+        "AvailabilityZoneId": "use2-az1",
+        "Iops": 3000,
+        "VolumeType": "gp3",
+        "MultiAttachEnabled": false,
+        "Throughput": 125,
+        "Operator": {
+          "Managed": false,
+          "HiddenByDefault": false
+        },
+        "VolumeArn": "arn:aws:ec2:us-east-2:548280227313:volume/vol-02dd0fbe1cd9a0e52",
+        "OwnerId": "548280227313",
+        "VolumeId": "vol-02dd0fbe1cd9a0e52",
+        "Size": 20,
+        "SnapshotId": "snap-0108123b1f84a2102",
+        "AvailabilityZone": "us-east-2a",
+        "State": "in-use",
+        "CreateTime": "2026-11-13T00:47:14.520000+00:00",
+        "Attachments": [
+          {
+            "DeleteOnTermination": true,
+            "EbsCardIndex": 0,
+            "VolumeId": "vol-02dd0fbe1cd9a0e52",
+            "InstanceId": "i-0b662a28fc2d1aeaf",
+            "Device": "/dev/sda1",
+            "State": "attached",
+            "AttachTime": "2026-11-13T00:47:14+00:00"
+          }
+        ],
+        "Encrypted": false
+      }
+    ]
+  }
+}

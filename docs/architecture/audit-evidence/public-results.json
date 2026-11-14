@@ -1,0 +1,155 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "type": "text/html",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 719,
+    "sha256": "30325e78156abb8384cd539150bed7e98cdb985ed52c1d7e69c82ee94719145a",
+    "assets": [
+      "/assets/index-DvLhM7V9.js",
+      "/assets/index-D-O9YkoH.css"
+    ],
+    "asset_results": [
+      {
+        "path": "/assets/index-DvLhM7V9.js",
+        "status": 200,
+        "bytes": 332989,
+        "sha256": "fe66531a671ec2a684a66c372d3a3449815d2c19d25e4fb60aa44d3f18ac8de8"
+      },
+      {
+        "path": "/assets/index-D-O9YkoH.css",
+        "status": 200,
+        "bytes": 20213,
+        "sha256": "23ba69aec4beb6a4b947030723158c7089c867b15506911a600e6d9f73c31e68"
+      }
+    ]
+  },
+  {
+    "path": "/student/attendance",
+    "status": 200,
+    "type": "text/html",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 719,
+    "sha256": "30325e78156abb8384cd539150bed7e98cdb985ed52c1d7e69c82ee94719145a"
+  },
+  {
+    "path": "/api/health",
+    "status": 200,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 48,
+    "sha256": "fb85755c32e7170199456d01a06681e14eb2e26a5f4b69125fbed530a13544c2",
+    "body": "{\"status\":\"healthy\",\"application\":\"CampusShift\"}"
+  },
+  {
+    "path": "/api/ready",
+    "status": 404,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 22,
+    "sha256": "37ec4665a8102d115ffd1ac20dae94c98b4dac64b0c1a68228aa2a531caeb35d",
+    "body": "{\"detail\":\"Not Found\"}"
+  },
+  {
+    "path": "/api/auth/me",
+    "status": 401,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 34,
+    "sha256": "be1b9e9515a81350ae093f3a46305dc7e95ce3e502353c5bebf0edb1a56d0cce",
+    "body": "{\"detail\":\"Please sign in again.\"}"
+  },
+  {
+    "path": "/api/students/me/classes",
+    "status": 401,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 34,
+    "sha256": "be1b9e9515a81350ae093f3a46305dc7e95ce3e502353c5bebf0edb1a56d0cce",
+    "body": "{\"detail\":\"Please sign in again.\"}"
+  },
+  {
+    "path": "/api/students/me/availability",
+    "status": 401,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 34,
+    "sha256": "be1b9e9515a81350ae093f3a46305dc7e95ce3e502353c5bebf0edb1a56d0cce",
+    "body": "{\"detail\":\"Please sign in again.\"}"
+  },
+  {
+    "path": "/api/supervisor/schedules",
+    "status": 401,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 34,
+    "sha256": "be1b9e9515a81350ae093f3a46305dc7e95ce3e502353c5bebf0edb1a56d0cce",
+    "body": "{\"detail\":\"Please sign in again.\"}"
+  },
+  {
+    "path": "/api/students/me/schedule",
+    "status": 401,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 34,
+    "sha256": "be1b9e9515a81350ae093f3a46305dc7e95ce3e502353c5bebf0edb1a56d0cce",
+    "body": "{\"detail\":\"Please sign in again.\"}"
+  },
+  {
+    "path": "/api/students/me/time-off",
+    "status": 401,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 34,
+    "sha256": "be1b9e9515a81350ae093f3a46305dc7e95ce3e502353c5bebf0edb1a56d0cce",
+    "body": "{\"detail\":\"Please sign in again.\"}"
+  },
+  {
+    "path": "/api/students/me/attendance",
+    "status": 401,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 34,
+    "sha256": "be1b9e9515a81350ae093f3a46305dc7e95ce3e502353c5bebf0edb1a56d0cce",
+    "body": "{\"detail\":\"Please sign in again.\"}"
+  },
+  {
+    "path": "/api/supervisor/employees",
+    "status": 401,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 34,
+    "sha256": "be1b9e9515a81350ae093f3a46305dc7e95ce3e502353c5bebf0edb1a56d0cce",
+    "body": "{\"detail\":\"Please sign in again.\"}"
+  },
+  {
+    "path": "/api/not-a-route",
+    "status": 404,
+    "type": "application/json",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 22,
+    "sha256": "37ec4665a8102d115ffd1ac20dae94c98b4dac64b0c1a68228aa2a531caeb35d",
+    "body": "{\"detail\":\"Not Found\"}"
+  },
+  {
+    "path": "/openapi.json",
+    "status": 200,
+    "type": "text/html",
+    "server": "nginx/1.28.3 (Ubuntu)",
+    "bytes": 719,
+    "sha256": "30325e78156abb8384cd539150bed7e98cdb985ed52c1d7e69c82ee94719145a"
+  },
+  {
+    "url": "https://3.133.115.154/",
+    "error": "<urlopen error [Errno 61] Connection refused>"
+  },
+  {
+    "url": "http://3.133.115.154:8000/api/health",
+    "error": "<urlopen error timed out>"
+  },
+  {
+    "github_main": "1243fceb646b8fa1a9b8aa92021175aed0d1d9c2",
+    "message": "Restore EC2 deployment and retire serverless infrastructure"
+  }
+]

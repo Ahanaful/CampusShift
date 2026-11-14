@@ -1,0 +1,22 @@
+{
+  "local_sha": "1fdf261d62353bb1c8eff8d66c489bf348ed9847",
+  "backend": {
+    "command": "../.venv/bin/python -m unittest discover -s tests -q",
+    "cwd": "backend",
+    "entries": 90,
+    "passed": 88,
+    "skipped": 2,
+    "result": "OK"
+  },
+  "scheduler": {
+    "entries": 15,
+    "passed": 15
+  },
+  "frontend_lint": "PASS",
+  "frontend_build": "PASS",
+  "build_hashes": {
+    "index-D-O9YkoH.css": "23ba69aec4beb6a4b947030723158c7089c867b15506911a600e6d9f73c31e68",
+    "index-DvLhM7V9.js": "fe66531a671ec2a684a66c372d3a3449815d2c19d25e4fb60aa44d3f18ac8de8"
+  },
+  "limits": "No production writes, live credential tests, restarts, or restore test. Initial backend test invocation from repository root failed imports; rerun from documented backend directory passed."
+}

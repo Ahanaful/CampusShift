@@ -1,0 +1,657 @@
+[
+  {
+    "path": ".gitattributes",
+    "lines": 3,
+    "sha256": "0441f7be186d4013384afd9cae5aa0345b08c0adfdf3fa139645f1b313bca2d8"
+  },
+  {
+    "path": ".gitignore",
+    "lines": 192,
+    "sha256": "6f05abd0a4dfc966aef910661661d1b19c05391658250f67cc75d36c065e9b62"
+  },
+  {
+    "path": "LICENSE",
+    "lines": 21,
+    "sha256": "9f08c170414916277d89bbb11afbfa73d7230b0dac18ad28c66a1fb322dd33a5"
+  },
+  {
+    "path": "README.md",
+    "lines": 364,
+    "sha256": "3e61c905ce5eda6fcc73d0ef508dc94a82e2312d66625ca2188c4bcb2cd848fe"
+  },
+  {
+    "path": "backend/.env.example",
+    "lines": 18,
+    "sha256": "d2b51642a9e753e019cc1dbece6d2340b97f1c9e71bbe4f174e035521fcee580"
+  },
+  {
+    "path": "backend/alembic.ini",
+    "lines": 4,
+    "sha256": "70e3246abd2804ec7c292aef7b3e3d31e1ae6c776bf4679a6eee2fd688bd1d02"
+  },
+  {
+    "path": "backend/alembic/env.py",
+    "lines": 34,
+    "sha256": "85e852c7a6049b3eadb630da6251172f4cd7357559b86fa45d94283c2a1826f1"
+  },
+  {
+    "path": "backend/alembic/script.py.mako",
+    "lines": 15,
+    "sha256": "e872497783a86c37adff84230ffe3893188aa3babe5b1f3da52f235470c79e26"
+  },
+  {
+    "path": "backend/alembic/versions/0001_initial.py",
+    "lines": 47,
+    "sha256": "92deea8ff4ec9e9080f414b310ab282943ccac8baa022aa8e219b2ca4f3b26a7"
+  },
+  {
+    "path": "backend/alembic/versions/509aa75b1592_add_staffing_locations_and_draft_.py",
+    "lines": 168,
+    "sha256": "9ba04c3320788aafbb0300fb60ed111dcbcc47fefda3852f6a7997ac8c261d64"
+  },
+  {
+    "path": "backend/alembic/versions/9e57ab896061_add_attendance_corrections_and_audit_.py",
+    "lines": 99,
+    "sha256": "a97003bd543890cd76d51588536148f326c7ba661c570ebceedecb9bc76ece80"
+  },
+  {
+    "path": "backend/alembic/versions/fab90f5980a1_add_time_off_draft_editing_and_.py",
+    "lines": 95,
+    "sha256": "4b95f25393f3623da3aa3167b46ff43a7e361b1cbc895f5dd6f0a9f826b3f953"
+  },
+  {
+    "path": "backend/app/__init__.py",
+    "lines": 1,
+    "sha256": "b603a532287b6e891def1545b2fe7b22ee59086a229fff43eff2109bd6d38291"
+  },
+  {
+    "path": "backend/app/api/__init__.py",
+    "lines": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "backend/app/api/attendance.py",
+    "lines": 84,
+    "sha256": "ad7b9d861ccfb52d12376026296c8f7d66f3dbfb6587faedb98c9390edb876e6"
+  },
+  {
+    "path": "backend/app/api/deps.py",
+    "lines": 50,
+    "sha256": "cb2d5ab15b2b4b2fa0d7b6cde9f4c0a093d3d708546fc2e643e44e64c9bbd967"
+  },
+  {
+    "path": "backend/app/api/routes.py",
+    "lines": 124,
+    "sha256": "f98abf52dcc21fd4849512b3a88cc66fd226dd57da58a749e768451cf6579d00"
+  },
+  {
+    "path": "backend/app/api/scheduling.py",
+    "lines": 112,
+    "sha256": "3b4e187742abe8f11eb4d11b6c976094513beda1782c2af6a6cac6ef81e738ac"
+  },
+  {
+    "path": "backend/app/api/workflows.py",
+    "lines": 93,
+    "sha256": "05f2c837365a9611c92f4789c1ab8266dd2b2106af602c9b34f27b720d3f12ad"
+  },
+  {
+    "path": "backend/app/core/__init__.py",
+    "lines": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "backend/app/core/attendance_time.py",
+    "lines": 54,
+    "sha256": "5b199e37ff770849440de69c80755dfa3e19b0224928116524abf35102bfdd0a"
+  },
+  {
+    "path": "backend/app/core/config.py",
+    "lines": 88,
+    "sha256": "d308e5c8d01cd32c07e4636666b0be25a9b90328b08b84c1ceb0a09ab71b1c87"
+  },
+  {
+    "path": "backend/app/core/lambda_runtime.py",
+    "lines": 48,
+    "sha256": "369feb45cbab953a0ac65e421cbd90e95fe9f9f809ffba95e09f8d3d88e597f5"
+  },
+  {
+    "path": "backend/app/core/logging_config.py",
+    "lines": 15,
+    "sha256": "4db3bfdc1b2a0385dca7e3ec26e57f0228f7eff2ea53630bec2e08ae6212b8e6"
+  },
+  {
+    "path": "backend/app/core/security.py",
+    "lines": 38,
+    "sha256": "1f9b274e6f87da5dfa514411609cc4d332831eab55bfa8c65a84c6ec8e08f713"
+  },
+  {
+    "path": "backend/app/db/__init__.py",
+    "lines": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "backend/app/db/session.py",
+    "lines": 72,
+    "sha256": "2e37edbbdb834817456e0d52be90c763d2ddbed112fb278797044a38d2fcc105"
+  },
+  {
+    "path": "backend/app/db/transactions.py",
+    "lines": 17,
+    "sha256": "264bb0f91d99d753cb4afd20aadbdb997700b30fad8b9acef56a50234d702ae8"
+  },
+  {
+    "path": "backend/app/models/__init__.py",
+    "lines": 260,
+    "sha256": "0a786a16159f5129d983e340fae2123ddae6c3ddfb570ee6fd432e56aa281e3a"
+  },
+  {
+    "path": "backend/app/schemas/__init__.py",
+    "lines": 97,
+    "sha256": "4bbe8564980209aff55eae39750c8696e300fc60c6d6209881251a690f0bf3fe"
+  },
+  {
+    "path": "backend/app/schemas/attendance.py",
+    "lines": 24,
+    "sha256": "162e5b8d387ca05eff457b8bfb0ada8bc2a6d80fe17e44af6b61ff57c5f2f581"
+  },
+  {
+    "path": "backend/app/schemas/scheduling.py",
+    "lines": 122,
+    "sha256": "9badc9dfdc4167701e6c6ff7819c9f204494a8939db242ff357902651f41fa14"
+  },
+  {
+    "path": "backend/app/schemas/workflows.py",
+    "lines": 66,
+    "sha256": "ba11a843905701c5976b26335bf8c82bb555109d10fbe122c07365f19c60b4ba"
+  },
+  {
+    "path": "backend/app/seed.py",
+    "lines": 53,
+    "sha256": "1e7261d20bb44642e1f2415fa03d39dc2387fa5f588ae9ee6c3e0f059fb38f61"
+  },
+  {
+    "path": "backend/app/seed_cloud_demo.py",
+    "lines": 63,
+    "sha256": "435cde30e0c4a3e062dc8e022d614d83a1c09e60b437c6093b9811814546dd74"
+  },
+  {
+    "path": "backend/app/seed_scheduling.py",
+    "lines": 101,
+    "sha256": "7f024e94812133384f231532599888d79bcd14b3a8fc6cddf15fff62450496b1"
+  },
+  {
+    "path": "backend/app/services/__init__.py",
+    "lines": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "backend/app/services/accounts.py",
+    "lines": 68,
+    "sha256": "9813ef2287bb49d74f4297c50b5bd894686533a2adda1476b4c426d6fb4b2f04"
+  },
+  {
+    "path": "backend/app/services/attendance.py",
+    "lines": 310,
+    "sha256": "bf566b0fbd71d3256d57c6f25841c78a6c4ced2aa13cc6df4fd0641d2913c805"
+  },
+  {
+    "path": "backend/app/services/schedule_editor.py",
+    "lines": 181,
+    "sha256": "c863eae7d58a7e86b32634db0854fc3a8f2baaed2064a85520a13db6077e8219"
+  },
+  {
+    "path": "backend/app/services/scheduling.py",
+    "lines": 225,
+    "sha256": "46ea3126d0b99b86026d333d3a67525501a9b6a82939134066fe2c8a1b07ae87"
+  },
+  {
+    "path": "backend/app/services/time_off.py",
+    "lines": 78,
+    "sha256": "1cf4abb006e72abba3b291448ee9bf04472a891624ce801dcd6dbfbad45a2094"
+  },
+  {
+    "path": "backend/app/services/windows.py",
+    "lines": 53,
+    "sha256": "ee2b6731700307e2ac2a90c19985b4c0b2d26761228f3a24fe7fb8798e14e697"
+  },
+  {
+    "path": "backend/lambda_handler.py",
+    "lines": 27,
+    "sha256": "62f60ebf1a8c9193fa48248fde96c8716fd3e2465d4d3a575fe83a65bad2891c"
+  },
+  {
+    "path": "backend/lambda_jobs.py",
+    "lines": 117,
+    "sha256": "13e33abc67186c903f3bbfed091b6b0ee36439a3fa07c5ff6062e28fe6d68779"
+  },
+  {
+    "path": "backend/main.py",
+    "lines": 89,
+    "sha256": "8aa51c92573d5da83303f1af3b8f2805f0ae36f56e37d65b85a20ac3bad8f8f1"
+  },
+  {
+    "path": "backend/requirements-dev.txt",
+    "lines": 2,
+    "sha256": "934fbb549ab3209320a68f549631f92ffa7dcd1372d15620c148eb5f55bd7735"
+  },
+  {
+    "path": "backend/requirements-lambda.lock",
+    "lines": 30,
+    "sha256": "e44c1c111f80f4207bd1585902a5e7e6e16d026d8280dc537225875fda562b05"
+  },
+  {
+    "path": "backend/requirements.txt",
+    "lines": 11,
+    "sha256": "77894e56a7064a28bac2ae5036a480c22c82e1dd33d37420b0e1faed23d63f22"
+  },
+  {
+    "path": "backend/tests/database_support.py",
+    "lines": 28,
+    "sha256": "dcd130d9d533bf8261bb04b4e5de902fbe603cd258277d516ff5701f1d06f8c1"
+  },
+  {
+    "path": "backend/tests/test_api.py",
+    "lines": 38,
+    "sha256": "6613be5dc1f1dfef0dadc0b9ff334fbe854428852688d217b9bf609594fc552b"
+  },
+  {
+    "path": "backend/tests/test_attendance.py",
+    "lines": 350,
+    "sha256": "fab3a14c7d441e6bf57d79f5dbddfdc8434a35794dd3c15c8aa4764022db5e1f"
+  },
+  {
+    "path": "backend/tests/test_aws_preflight.py",
+    "lines": 135,
+    "sha256": "402bef9c7c52b841d6e48c63f7fbb824146e3b08d471b73165716483c82ff659"
+  },
+  {
+    "path": "backend/tests/test_deployment.py",
+    "lines": 116,
+    "sha256": "18c0c8b4914f36f08f0d39a59af5c1cb1ef3edcddce072f3557ee871a8e4bf98"
+  },
+  {
+    "path": "backend/tests/test_lambda.py",
+    "lines": 164,
+    "sha256": "84b91fd21ddd8e3d6f8d0f97b57e42b688230349ebb40a624c5bbf6a37927c53"
+  },
+  {
+    "path": "backend/tests/test_phase2.py",
+    "lines": 252,
+    "sha256": "870fd7dd4a251effeda66054ec14c3468792d15616d369b947fda7141e1fa6b0"
+  },
+  {
+    "path": "backend/tests/test_scheduling.py",
+    "lines": 274,
+    "sha256": "f6b1eb52ccb87d2bdabed4bdea53b56c1bda65a090d6f59c3ba6178734002397"
+  },
+  {
+    "path": "backend/tests/test_workflows.py",
+    "lines": 286,
+    "sha256": "bfe2c051afed841e413d3d34335bd466e5d78545c0943e609d93f006d708cd0a"
+  },
+  {
+    "path": "docs/architecture.md",
+    "lines": 29,
+    "sha256": "f81ce4463b2da754f803b39dab0f507d8b40a259b6a46ad831bc7ae486fc6c9d"
+  },
+  {
+    "path": "docs/attendance.md",
+    "lines": 64,
+    "sha256": "ae035237869ac8fca1a4cb90ba539aab2e2b72a6d9c586d22dae6ddbc4781aeb"
+  },
+  {
+    "path": "docs/aws-architecture.md",
+    "lines": 76,
+    "sha256": "69b8dcec26f0f7269f4ad3ebe16df873856074597d40011b96adfd74abc410be"
+  },
+  {
+    "path": "docs/aws-deployment.md",
+    "lines": 285,
+    "sha256": "e6d31a5a79ad0e573c1035891264c7407d800aedd63d759ae0ae500130040458"
+  },
+  {
+    "path": "docs/aws-ec2-rds-proposal.md",
+    "lines": 174,
+    "sha256": "7f09d58bf62ac85a9b34a124dac61240e3a295be16f704fbf2a193cadfc25482"
+  },
+  {
+    "path": "docs/aws-ec2-verification.md",
+    "lines": 224,
+    "sha256": "c16efc9e477b3d9c0b3e5db7d27004ef959f9b316cc88cf248197786b31fa379"
+  },
+  {
+    "path": "docs/aws-profile-setup.md",
+    "lines": 58,
+    "sha256": "69fb314d76a92796a0f4880017a60d9c5871168f254d6f053b61ac3db8fbbb1e"
+  },
+  {
+    "path": "docs/aws-project-free-plan-decision.md",
+    "lines": 110,
+    "sha256": "9b5f6c535efb07bbe17490bf62f84f7c9a5ae204dfa6a31bc4d9880ded28cc1c"
+  },
+  {
+    "path": "docs/aws-serverless-deployment.md",
+    "lines": 351,
+    "sha256": "b196eed872aca2eae8e1c9b2cd7be859832d76f64b1b64a77ef2302720d81b32"
+  },
+  {
+    "path": "docs/aws-stage-a.md",
+    "lines": 138,
+    "sha256": "9811dfc627ae45095fe35203479df57cc6f76c1c53365870771aac2468199004"
+  },
+  {
+    "path": "docs/aws-troubleshooting.md",
+    "lines": 32,
+    "sha256": "d186a9ac137ee2c21950f4c5a7c1d8680eca403a64ea36624c84a6618155c9b2"
+  },
+  {
+    "path": "docs/sandbox-recovery.md",
+    "lines": 28,
+    "sha256": "19762470b5525839ad8d72eae27dcb2f58740158a0366d894edf363db08cf912"
+  },
+  {
+    "path": "docs/scheduling.md",
+    "lines": 41,
+    "sha256": "15142861576addf36e7e20451a28b0302a62a35f4179485b898501b5c783c8b7"
+  },
+  {
+    "path": "docs/verification.md",
+    "lines": 175,
+    "sha256": "4eb5a42b0b094d0ee3c9ebee48f4326763851423a60558fcc1dc142f3890d0b2"
+  },
+  {
+    "path": "docs/workflows.md",
+    "lines": 51,
+    "sha256": "28c931fd51a610bf07cfb33fd5dadf61c63c3ce4606af2e717a9d0b01e4e822f"
+  },
+  {
+    "path": "frontend/.env.example",
+    "lines": 4,
+    "sha256": "bc61dcbde040889ae17830a38c61808973ae2f29d96dd6179632342e19959b07"
+  },
+  {
+    "path": "frontend/eslint.config.js",
+    "lines": 25,
+    "sha256": "fd2e887039383394a0aa16512057dbec70f45df181ddb9cc7128f23566677309"
+  },
+  {
+    "path": "frontend/index.html",
+    "lines": 18,
+    "sha256": "6ad11d5e29e1556f697f3912cbb5d65cdb403ab1b4f057bbfe425dc0e2155604"
+  },
+  {
+    "path": "frontend/package-lock.json",
+    "lines": 3423,
+    "sha256": "50549f66c053a3f0da33cf078c7c4443136eec0fd6ec482f38badc7425759a9c"
+  },
+  {
+    "path": "frontend/package.json",
+    "lines": 26,
+    "sha256": "8da4077b89cb7aad575a4718524159a4f9330fe2dfcea2bd95fbb7c3de0916eb"
+  },
+  {
+    "path": "frontend/public/favicon.svg",
+    "lines": 1,
+    "sha256": "c636b25c80ec90f9d5aec78c2a90163e35a1f52cab0b240011821821adfa9d2f"
+  },
+  {
+    "path": "frontend/src/App.jsx",
+    "lines": 264,
+    "sha256": "8124509ebd01a66523fc482cfe593b8f1633fd306fd2781526735a5b52efb63a"
+  },
+  {
+    "path": "frontend/src/Router.jsx",
+    "lines": 113,
+    "sha256": "8725a28dba923a2ba94d65883779a36b9428cec1a56af4f179e0e8a6a510483c"
+  },
+  {
+    "path": "frontend/src/auth/AuthContext.jsx",
+    "lines": 57,
+    "sha256": "76ca30ca081830fde048525d4be516f566a8682982af83641a82782a56cae6b1"
+  },
+  {
+    "path": "frontend/src/components/DashboardLayout.jsx",
+    "lines": 82,
+    "sha256": "9133f517c3f3eb76007969626ee33fab252142b65e4c470b867777bae27627e7"
+  },
+  {
+    "path": "frontend/src/components/ScheduleEditor.jsx",
+    "lines": 294,
+    "sha256": "589ba55a7d5d14f20c26191660477489730e527bc83dd753ee50f167cbc8dc04"
+  },
+  {
+    "path": "frontend/src/components/ui.jsx",
+    "lines": 173,
+    "sha256": "521e12883ae0cddca7fac6677d3654253adef33cce1345b702f160d82006d30d"
+  },
+  {
+    "path": "frontend/src/dashboard.css",
+    "lines": 673,
+    "sha256": "db72a004670bf1d8edeb5cd80093b1a57c3206125d15dd81979c2d655574dd13"
+  },
+  {
+    "path": "frontend/src/main.jsx",
+    "lines": 10,
+    "sha256": "861cb002dcc7dcaa3dd08584bf5507b5bda58e1c5ad93cce7dbe97d9bc7e5816"
+  },
+  {
+    "path": "frontend/src/pages/AttendancePages.jsx",
+    "lines": 704,
+    "sha256": "23be60b882a2a727d0a7ba338122733e58877a232fc4c1bc54c7c10d21016f07"
+  },
+  {
+    "path": "frontend/src/pages/AuthPage.jsx",
+    "lines": 163,
+    "sha256": "8ad75adfaf5e0cd710fd4727516c50bbbd95005dcb93ee474662879ea11206df"
+  },
+  {
+    "path": "frontend/src/pages/SchedulePages.jsx",
+    "lines": 454,
+    "sha256": "61a23992d9c94bb39327615e961bcfe0ce2e4c345278e9f7f5d8b6aca90e0a63"
+  },
+  {
+    "path": "frontend/src/pages/StaffingPages.jsx",
+    "lines": 479,
+    "sha256": "89a25e9204397194b2a72ea03b8935bf2035bfb481780566579a826e69ea499d"
+  },
+  {
+    "path": "frontend/src/pages/StudentPages.jsx",
+    "lines": 408,
+    "sha256": "d77531b1ab2f9064d7c61b8680af1878e84095c9fd0d660329815254322dd8ba"
+  },
+  {
+    "path": "frontend/src/pages/SupervisorPages.jsx",
+    "lines": 224,
+    "sha256": "72d16e8085be2fcd985f48a21973d6e92081eff6dbae62240ce4a1786ca65290"
+  },
+  {
+    "path": "frontend/src/pages/TimeOffPages.jsx",
+    "lines": 265,
+    "sha256": "07761d5a50928d0e3b08f8a64c08bfd1954edbd78b570377142b6cf549ab1226"
+  },
+  {
+    "path": "frontend/src/services/api.js",
+    "lines": 65,
+    "sha256": "dc73f53bdad467b3c9d663120a43da4f150673eb7dd9673d5a68eb915fbba363"
+  },
+  {
+    "path": "frontend/src/styles.css",
+    "lines": 442,
+    "sha256": "c9ec89c58c5645c28c120c74d9b1ab48d871745aee06f88db07392ee1cf40a3f"
+  },
+  {
+    "path": "frontend/vite.config.js",
+    "lines": 20,
+    "sha256": "baf7dfd8321c650ba45d9dbce7aea9da41e1c5e1ebd2968629e113b182a06661"
+  },
+  {
+    "path": "infrastructure/README.md",
+    "lines": 16,
+    "sha256": "40758cbc0a548c9940c81fed9f60b3ec1b12da01fad1495361fcb6e114717339"
+  },
+  {
+    "path": "infrastructure/cost-plan.us-east-1.json",
+    "lines": 82,
+    "sha256": "6529fe0f66fa2514392ee5e0fc1d57899ccfd63af742f1d851d16ad6514fbd74"
+  },
+  {
+    "path": "infrastructure/cost-plan.us-east-2.json",
+    "lines": 81,
+    "sha256": "85f8c54a5ae038885c4b930e317a5023767777761d8d23103d7e10d844c20bb9"
+  },
+  {
+    "path": "infrastructure/frontend.json",
+    "lines": 313,
+    "sha256": "c844a05e77eb80af60d336e118046174129434236266fdfc041c67ef82b35960"
+  },
+  {
+    "path": "infrastructure/frontend.parameters.example.json",
+    "lines": 3,
+    "sha256": "ddc69e6206988a70000f8c915b542a709408b0eba1d75226c27e23fd7fa94fef"
+  },
+  {
+    "path": "infrastructure/iam/preflight-policy.json",
+    "lines": 40,
+    "sha256": "0861052ec517771531480ac5d627b69c10e252f701c34ac8a9d3c7f2f532fcb5"
+  },
+  {
+    "path": "infrastructure/iam/runtime-logs.json",
+    "lines": 27,
+    "sha256": "c86ee16caeb97c267893faabe634e527fbab0f0d2a900e27f1aaefe78933995a"
+  },
+  {
+    "path": "infrastructure/platform.json",
+    "lines": 439,
+    "sha256": "a5ac61d0f09730a26bb445e05ae2deeaefcfd319785751af966cb9ece1b8fcb5"
+  },
+  {
+    "path": "infrastructure/platform.parameters.example.json",
+    "lines": 13,
+    "sha256": "208fa874e4938c0a1005fff48a1bf285fd00c57c6d121428848d7290464a79aa"
+  },
+  {
+    "path": "infrastructure/runtime/campusshift.service",
+    "lines": 30,
+    "sha256": "00a37376055b0c687361ac739c90c7e23b085c93c7f4250139ab215306855b23"
+  },
+  {
+    "path": "infrastructure/runtime/cloudwatch-agent.json",
+    "lines": 5,
+    "sha256": "10441dab8122ea8b7f3125074e4c952c3af3a25d22d25d675f973c98100730a6"
+  },
+  {
+    "path": "infrastructure/runtime/logging.json",
+    "lines": 13,
+    "sha256": "26e5ae479e48052cb9db07fa3ba86d032fe1f3539b7327f55a9a05dfae400f01"
+  },
+  {
+    "path": "infrastructure/runtime/logrotate.conf",
+    "lines": 10,
+    "sha256": "deeba09304e285d3795f27f5bb931431d123bd654a5f17a3a2299df14f3905d3"
+  },
+  {
+    "path": "infrastructure/runtime/nginx.conf",
+    "lines": 24,
+    "sha256": "c2d1342a123c3ccb133dd542fa79bf1cfd3439f0367660adfe36918048feb086"
+  },
+  {
+    "path": "infrastructure/serverless-artifacts.json",
+    "lines": 118,
+    "sha256": "8092bf08c00d309ad7a5f5f78c9f3196ceab20f0626e136d52910318c8f1709d"
+  },
+  {
+    "path": "infrastructure/serverless-artifacts.parameters.example.json",
+    "lines": 3,
+    "sha256": "ad41ee2b3858582252d51d19ba3dfb8386a0df4170084fd187f0276e2e466d7e"
+  },
+  {
+    "path": "infrastructure/serverless.json",
+    "lines": 1120,
+    "sha256": "04ab23b65f4a031107741e2b36e636c46a84cce028b597b1d1e2ce19cea24975"
+  },
+  {
+    "path": "infrastructure/serverless.parameters.example.json",
+    "lines": 10,
+    "sha256": "5e63a4e8ac3e691f5c4ea247aab491de11ced342be7c36af676e16d51de8ea34"
+  },
+  {
+    "path": "pyproject.toml",
+    "lines": 12,
+    "sha256": "f79e8a181d0490226304ca14ebe054c3171f05bb0956df73144618693580ac9f"
+  },
+  {
+    "path": "scheduler/README.md",
+    "lines": 5,
+    "sha256": "f4ee37a7cf7fad9f847d9191ed4732648e2c99e4ab0969e4b97077fe7ea32732"
+  },
+  {
+    "path": "scheduler/__init__.py",
+    "lines": 1,
+    "sha256": "413ac80d48e6513b1af418cfbd165fa9055f582e1bb9bb9025302c3d00fabd9a"
+  },
+  {
+    "path": "scheduler/engine.py",
+    "lines": 236,
+    "sha256": "79c2402e38260c46035215d353ee549eb9563986a0cca43d8ed6862eca34a417"
+  },
+  {
+    "path": "scheduler/tests/test_engine.py",
+    "lines": 114,
+    "sha256": "02706bfa884edf1abc661673f3f5444a820171288a8ecdd6e2cedf6e6d140612"
+  },
+  {
+    "path": "scripts/README.md",
+    "lines": 22,
+    "sha256": "aa6bc54908a3a4475ba7888b0e0dd5e1ecfdf408f65d1cd715a14ca9aabd806f"
+  },
+  {
+    "path": "scripts/aws_deploy.py",
+    "lines": 314,
+    "sha256": "d5ab7637350ad827aeb8dd7bf28f7ae2a152089e559032a77cca3dc2e96519a5"
+  },
+  {
+    "path": "scripts/build_lambda.py",
+    "lines": 64,
+    "sha256": "2d9eb8aefd8003790d0625bd58321aa13e599d3ea2addb8ab433a6ef40d205ad"
+  },
+  {
+    "path": "scripts/configure_server.py",
+    "lines": 64,
+    "sha256": "97956e94bc5a715ce5fa87acd2ddd0b94abd102fda415bb96a8de1575b084c03"
+  },
+  {
+    "path": "scripts/database_backup.sh",
+    "lines": 24,
+    "sha256": "a455d61f2910f6b142cc5b8cf2ba2dc0b6882fa5a407623fa036a58ba1eab22a"
+  },
+  {
+    "path": "scripts/deploy_backend.sh",
+    "lines": 63,
+    "sha256": "f86d24bef91c6d07f1af429e5b5e9b48febba75649a3e6fde4ee9cbb28b7aaee"
+  },
+  {
+    "path": "scripts/package_backend.py",
+    "lines": 23,
+    "sha256": "29222403b1ece2a21658d1cfab20194428ada29fd61cd24f0ba3963475502218"
+  },
+  {
+    "path": "scripts/requirements-infrastructure.txt",
+    "lines": 2,
+    "sha256": "b483c4f2184abd749ab354302809414af2107e29ec9d435ebae0bbd370c9b74e"
+  },
+  {
+    "path": "scripts/test_postgresql.py",
+    "lines": 92,
+    "sha256": "0ada9a2c1d5ad3075a46bffbfe2ec47c83ab45fb40c39cb29f4300bd09462e0a"
+  },
+  {
+    "path": "scripts/verify_deployment.py",
+    "lines": 60,
+    "sha256": "83264605ac19df10ea7eb9e816e25277e03ce63793d121bbd73cb76117072a1d"
+  },
+  {
+    "path": "scripts/verify_lambda_package.py",
+    "lines": 60,
+    "sha256": "d92e2c0961ee30658444adb1b95600d67b1d190eb525a994fc92be5c998d7c17"
+  }
+]

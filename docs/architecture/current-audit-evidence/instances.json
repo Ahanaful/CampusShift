@@ -1,0 +1,42 @@
+{
+  "exit": 0,
+  "data": [
+    {
+      "Id": "i-0b662a28fc2d1aeaf",
+      "State": "running",
+      "Type": "t3.micro",
+      "PublicIp": "3.133.115.154",
+      "PrivateIp": "172.31.7.136",
+      "Vpc": "vpc-037fd02904c677068",
+      "Subnet": "subnet-04f8e92b45880a336",
+      "Groups": [
+        {
+          "GroupId": "sg-0c293c3a0ee64fd10",
+          "GroupName": "launch-wizard-1"
+        }
+      ],
+      "Volumes": [
+        {
+          "DeviceName": "/dev/sda1",
+          "Ebs": {
+            "AttachTime": "2026-11-13T00:47:14+00:00",
+            "DeleteOnTermination": true,
+            "Status": "attached",
+            "VolumeId": "vol-02dd0fbe1cd9a0e52",
+            "EbsCardIndex": 0
+          }
+        }
+      ],
+      "Profile": null,
+      "Image": "ami-0e1011556f696c3d3",
+      "Metadata": {
+        "State": "applied",
+        "HttpTokens": "required",
+        "HttpPutResponseHopLimit": 2,
+        "HttpEndpoint": "enabled",
+        "HttpProtocolIpv6": "disabled",
+        "InstanceMetadataTags": "disabled"
+      }
+    }
+  ]
+}

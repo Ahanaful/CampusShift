@@ -6,9 +6,12 @@ Updated November 13, 2026 America/Chicago (cleanup completed November 14 UTC).
 
 ## Live application
 
+**Superseding rollout:** [November 13 production release](production-rollout.md) enabled trusted HTTPS, readiness, daily SQLite backups and encrypted off-server copies. The inventory below includes historical cleanup evidence.
+
+
 | Component | Verified state |
 | --- | --- |
-| Public application | http://3.133.115.154 |
+| Public application | https://3.133.115.154 |
 | Instance | `CampusShift-Server`, `i-0b662a28fc2d1aeaf` |
 | Compute | Running Linux `t3.micro`, `us-east-2a` |
 | Root disk | 20 GiB gp3, `vol-02dd0fbe1cd9a0e52`, 3,000 IOPS / 125 MiB/s |
@@ -17,9 +20,9 @@ Updated November 13, 2026 America/Chicago (cleanup completed November 14 UTC).
 | Backend | `/api/health` returns HTTP 200 and `{"status":"healthy","application":"CampusShift"}` |
 | Access | Public HTTP/HTTPS allowed by SG; SSH restricted to `129.107.192.111/32` |
 
-The existing server, disk, network and application data were not changed during the serverless attempt or teardown. Its public IP is automatically assigned and can change after stop/start. The current database engine/path, host processes, backup coverage and deployed Git revision have not been inspected over SSH. Application liveness does not prove all data workflows or migration readiness.
+The existing server, disk, network and application data were not changed during the serverless attempt or teardown. Its public IP is automatically assigned and can change after stop/start. SSH confirmed SQLite, service processes and the original fc04a91 checkout; the active source release is now phase6e-61652acbf5f2. Application liveness does not prove all data workflows or migration readiness.
 
-HTTPS is not verified; the tested public URL is HTTP, which does not protect login credentials. The existing root volume is unencrypted and deletes on instance termination. Preserve data and inspect backups before any future host replacement or termination. The Amazon Linux installers in the repository are preparation tools and must not be run on this Ubuntu/Nginx host without adaptation.
+Trusted IP HTTPS, automatic renewal and HTTP-to-HTTPS redirect are now verified. The existing root volume is unencrypted and deletes on instance termination. Preserve data and inspect backups before any future host replacement or termination. The Amazon Linux installers in the repository are preparation tools and must not be run on this Ubuntu/Nginx host without adaptation.
 
 ## Cost after cleanup
 

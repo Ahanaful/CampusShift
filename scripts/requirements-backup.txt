@@ -1,0 +1,2 @@
+# Local operator backup environment only; not an application dependency.
+cryptography==50.0.2

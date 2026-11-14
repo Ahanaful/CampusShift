@@ -1,0 +1,17 @@
+[Unit]
+Description=CampusShift consistent SQLite backup (existing Ubuntu host)
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+UMask=0077
+ExecStart=/usr/bin/python3 /home/ubuntu/.local/lib/campusshift/sqlite_backup.py backup --database /home/ubuntu/CampusShift/backend/campusshift.db --directory /home/ubuntu/backups/campusshift --keep 14
+TimeoutStartSec=180
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/ubuntu/backups/campusshift
+# sqlite3 may need to open existing WAL/SHM files; prohibit SQL writes using mode=ro.
+ReadWritePaths=/home/ubuntu/CampusShift/backend
+

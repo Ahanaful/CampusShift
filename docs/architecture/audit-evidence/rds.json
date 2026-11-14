@@ -1,0 +1,4 @@
+{
+  "exit": 254,
+  "data": "aws: [ERROR]: An error occurred (AccessDenied) when calling the DescribeDBInstances operation: User: arn:aws:iam::548280227313:user/campusshift-diagram-reader is not authorized to perform: rds:DescribeDBInstances on resource: arn:aws:rds:us-east-2:548280227313:db:* because no identity-based policy allows the rds:DescribeDBInstances action"
+}

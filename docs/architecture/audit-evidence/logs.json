@@ -1,0 +1,4 @@
+{
+  "exit": 254,
+  "data": "aws: [ERROR]: An error occurred (AccessDeniedException) when calling the DescribeLogGroups operation: User: arn:aws:iam::548280227313:user/campusshift-diagram-reader is not authorized to perform: logs:DescribeLogGroups on resource: arn:aws:logs:us-east-2:548280227313:log-group::log-stream: because no identity-based policy allows the logs:DescribeLogGroups action"
+}

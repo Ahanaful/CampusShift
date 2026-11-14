@@ -10,6 +10,7 @@ Use the existing EC2 deployment, profile `campusshift` and selected Region `us-e
 | `deploy_backend.sh` | New Amazon Linux release/migrations/systemd/TLS installer; not a verified updater for the existing Ubuntu host |
 | `test_postgresql.py` | Disposable local PostgreSQL regression and synthetic backup/restore checks |
 | `database_backup.sh` | PostgreSQL dump and explicit empty-target restore; verify the actual host database before use |
+| `sqlite_backup.py` | SQLite online backup, last-N retention, integrity-checked non-overwriting restore, and checksum-verified SSH pull; see [EC2 remediation](../docs/ec2-remediation.md) |
 | `verify_deployment.py` | HTTPS/readiness/deep-link checks with optional privately prompted fictional-account role checks |
 | `requirements-infrastructure.txt` | Separate pinned local CloudFormation validator |
 

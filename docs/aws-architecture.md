@@ -4,15 +4,15 @@ The selected deployment is one running Linux `t3.micro` in Ohio (`us-east-2`) wi
 
 ```mermaid
 flowchart LR
-    Browser -->|HTTP currently verified| Nginx[Nginx on EC2]
+    Browser -->|HTTPS verified| Nginx[Nginx on EC2]
     Nginx --> Assets[React static assets]
     Nginx -->|/api| API[FastAPI on EC2]
-    API --> Data[Application database: host configuration needs inspection]
+    API --> Data[SQLite on EBS]
 ```
 
 There is no active Lambda, API Gateway, RDS/Aurora, S3 or CloudFront deployment. The discarded serverless attempt's private networking, artifact storage, logs and database configuration were removed; its three secrets are marked for deletion without ongoing charges.
 
-The current host's database engine/path, backup process and deployed code revision have not been inspected. Local development defaults to SQLite; the repository supports PostgreSQL for future production configuration. Production mode requires PostgreSQL, a strong signing key and HTTPS CORS origins. Do not claim the current host has those settings solely because templates exist.
+The host uses SQLite at `/home/ubuntu/CampusShift/backend/campusshift.db`, a daily online backup timer and encrypted copies on the operator computer. Active release: `phase6e-61652acbf5f2`; see [rollout evidence](production-rollout.md). Local development defaults to SQLite; the repository supports PostgreSQL for future production configuration. Production mode requires PostgreSQL, a strong signing key and HTTPS CORS origins. Do not claim the current host has those settings solely because templates exist.
 
 Backend authorization, transaction handling, migration checks, scheduling and attendance remain application responsibilities. AWS-managed human access uses the `campusshift` profile and the Free Plan. All Regional resources must stay in the selected Region; no plan upgrade or managed-policy modification is authorized.
 

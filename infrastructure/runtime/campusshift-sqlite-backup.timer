@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily CampusShift SQLite backup
+
+[Timer]
+OnCalendar=*-*-* 06:00:00 UTC
+RandomizedDelaySec=300
+Persistent=true
+Unit=campusshift-sqlite-backup.service
+
+[Install]
+WantedBy=timers.target

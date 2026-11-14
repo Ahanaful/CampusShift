@@ -1,5 +1,7 @@
 # Verification
 
+Latest: [approved production rollout results](production-rollout.md), including trusted TLS, readiness, backup restore, server-side fixture tests and preservation across restart. Historical results below remain dated evidence.
+
 ## EC2 reversion and serverless teardown — November 13, 2026
 
 The user authorized deleting the attempt resources and pushing the EC2-only repository. Current facts and cleanup receipts are summarized in [current deployment](aws-current-deployment.md). All three stacks, the versioned artifact/bucket, logs, DB configuration and separate private network were deleted. The three secrets are marked for deletion with no ongoing charges. Service listings confirmed absence of the attempt's active resources; existing EC2/default VPC/root disk were preserved. No host data, plan or managed-policy changes occurred.
@@ -204,3 +206,13 @@ The verification servers were stopped afterward. No cloud resources were accesse
 Node/npm were absent from PATH, so verification used a portable Node runtime in ignored `.local/`. Regular development requires installing Node or adding a local runtime to PATH. The Windows sandbox blocked Python package setup and esbuild child processes; those steps succeeded with tool execution outside the sandbox.
 
 No browser preview tool was available. Visual rendering, responsive layouts in a browser, and clicking the offline/retry status flow were not verified. Follow the root README's manual connection checks to verify those states.
+# EC2 remediation verification (local, November 13, 2026)
+
+Prepared fixes and production approval gates are in [ec2-remediation.md](ec2-remediation.md).
+The current local backend suite ran 90 entries: 88 passed, 2 PostgreSQL-only skips;
+scheduler 15/15 passed. Eleven remediation tests cover consistent SQLite WAL
+backup/retention/restore, rejection of overwrite/corruption/unsafe redirects, and
+fictional registration/login/class persistence across real local Uvicorn restarts
+and recovery into a separate database. SSH transfer failure tests mock transport;
+no production records or credentials are used. Production backup scheduling,
+off-server recovery, release/readiness, HTTPS and renewal remain awaiting approval.

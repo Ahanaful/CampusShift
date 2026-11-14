@@ -1,0 +1,9 @@
+[Unit]
+Description=Renew CampusShift short-lived trusted IP certificate
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/snap/bin/certbot renew --quiet --deploy-hook "/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx"
+TimeoutStartSec=300

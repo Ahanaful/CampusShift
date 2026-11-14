@@ -1,19 +1,23 @@
 # EC2 deployment and operations
 
+For the verified Ubuntu/SQLite host, use the [EC2 remediation release plan](ec2-remediation.md).
+The approved rollout is complete; see [production results](production-rollout.md).
+The PostgreSQL/Amazon Linux installer is not an in-place updater.
+
 **Use the existing CampusShift EC2 application.** Selected Region: `us-east-2` (Ohio); CLI profile: `campusshift`. Current URL, resource IDs, cost and cleanup evidence are in [current deployment](aws-current-deployment.md). The serverless attempt was removed; do not recreate it.
 
 ## Existing host
 
-Nginx serves the frontend and proxies the API at http://3.133.115.154. The `CampusShift-Server` instance is running. The application and its data were preserved throughout teardown. The database engine/path, service manager configuration and deployed revision still need host inspection; do not infer them from the prepared PostgreSQL templates.
+Nginx serves the frontend and proxies the API at https://3.133.115.154. The `CampusShift-Server` instance is running. The application and its data were preserved throughout teardown. SQLite at `/home/ubuntu/CampusShift/backend/campusshift.db` and systemd/Uvicorn are verified. The active release is `phase6e-61652acbf5f2`; the original Git checkout remains intact for rollback.
 
-The public HTTP URL and `/api/health` were checked. HTTPS is not verified. Do not send real credentials over plaintext HTTP. `/api/health` is liveness; the repository's `/api/ready` checks database schema readiness, but that route has not been verified on this existing host.
+Trusted HTTPS and HTTP redirection are verified. `/api/health` and `/api/ready` return 200. The backup and certificate renewal timers are active; see rollout results for remaining acceptance limits.
 
 Read-only infrastructure checks:
 
 ```bash
 aws sts get-caller-identity --profile campusshift --region us-east-2
 aws ec2 describe-instance-status --instance-ids i-0b662a28fc2d1aeaf --include-all-instances --profile campusshift --region us-east-2
-curl --fail http://3.133.115.154/api/health
+curl --fail https://3.133.115.154/api/health
 ```
 
 Use AWS Settings > View all projects > Overview > Additional Info > Region to confirm the selected Region. AWS Settings > Billing shows credit consumption. Keep the Free Plan and managed human role; no IAM team-member setup, Organizations changes, Advanced Features or CDK bootstrap is required.

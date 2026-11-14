@@ -1,0 +1,6 @@
+Local SHA: 0b445f6672cfb4ebf44a265babdc9e7fc0519737
+Command (backend): PYTHONPATH=tests ../.venv/bin/python -m unittest test_api test_phase2 test_scheduling test_workflows test_attendance test_deployment -q
+Ran 79 tests in 4.445s
+OK (skipped=2)
+Scheduler: 15 tests, OK
+Initial module-style invocation had test import errors; corrected with repository test import path. No application change was needed.
